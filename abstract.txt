@@ -1,0 +1,35 @@
+Using Randomized Quantile Residuals to Assess Model Fit of Generalized Linear Mixed Models
+
+Julia Piaskowski
+Statistical Programs, University of Idaho, Moscow, ID, USA 
+
+Assessing if a generalized linear mixed model (GLMM) is appropriately specified for a given data set and data generating process is challenging since often GLMMs have no defined distribution for model residuals. Detecting deviations from model expectations (e.g. dispersion, zero-inflation) is difficult given that some non-normal distributions have mathematically defined mean-variance relationships, and they may have discrete outcomes that are less amenable to direct interpretation via plotting. Scaled residuals such as Pearson or studentized residuals can alleviate these challenges to an extent, but they also can be difficult to correctly interpret for over- and underdispersion. Randomized quantile residuals are another option, simulating data for each data point using the fitted GLMM for the distribution and its parameters and obtaining the quantile for each observation from the cumulative distribution function of the simulated data. Thus, quantile residuals are a measure of how well the data conform to the specified model and distribution. Quantile residuals are expected to follow a uniform distribution [0,1] and can be interpreted similarly to common diagnostic residuals plots such as the q-q plot and the residual-versus-fitted values plot. Many hypothesis tests can be conducted using quantile residuals including tests for over- or underdispersion, uniformity, zero inflation, and categorical dependence among the independent variables. This method is implemented with the R package “DHARMa”.  Although implementations in other languages are not know, the method itself is relatively simple and can rewritten in other statistical programming languages. The purpose of this talk is to describe the process of generating and evaluating randomized quantile residuals for different aspects of fitted GLMMs. Randomized quantile residuals are a useful model diagnostic tool, but it should be noted that at this time, there is a lack of information on their performance and reliability across a broad range of conditions. 
+
+
+## Extra
+
+Goal: go through the process step-by-step so people understand what it is doing and how to interpret the results.
+Develop some SAS code for manually calculating quantile residuals? 
+
+## Dumping Ground for Some Resources:
+
+* Main DHARMa Vignette: https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
+* Integer paper: https://gksmyth.github.io/pubs/residual.pdf#page68
+* DHARMa source code: https://github.com/florianhartig/DHARMa/tree/master/DHARMa/R
+* DHARMa manual: https://cran.r-project.org/web/packages/DHARMa/DHARMa.pdf#page68
+* statmod package (written by authors of original quantile resid paper): https://search.r-project.org/CRAN/refmans/statmod/html/qresiduals.html, https://cran.r-project.org/web/packages/statmod/index.html (goes back to 2003!)
+
+
+Conditional models
+
+- Conditional v Marginal Models
+
+from Quentin: are you going to mention at all whether the marginal or conditional quantile residuals are more relevant to look at, and whether they might lead to different conclusions? Might be too much for this abstract but I was just curious.
+
+this depends on what is enabled in the 'simulate' function of each fynction
+All simulations are marginal
+
+* https://github.com/glmmTMB/glmmTMB/issues/961 conditional models
+* https://github.com/glmmTMB/glmmTMB/issues/888
+
+https://easystats.github.io/performance/reference/simulate_residuals.html

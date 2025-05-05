@@ -1,0 +1,48 @@
+
+/*
+.reveal section:not(.title) {
+  background-image: url('images/UI_Main_horizontal_4c.png'); 
+  background-repeat: no-repeat; 
+  background-position: top right; 
+  background-size: 200px auto;
+  background-size: contain;  
+  }
+*/
+
+/*
+  .reveal .bottom-banner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--ui-gold); 
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+ */
+
+
+.blockquote {
+  line-height: 1.5; /* Improve text readability */
+  padding-top: 35px;
+  padding: 1.5rem 1rem;
+  background-color: #FAF9F6;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4);
+  color: #5c5c5c;
+  font-size: 95%;
+  margin-left: 1.5rem;
+  border: none;
+  font-family: 'Overpass Mono',  Courier, monospace;
+  font-style: normal;
+}
+
+.right-align {
+  text-align: right;
+}
+
+.outlined-shadow-image {
+  outline: 2px solid #333; /* Adjust thickness and color as needed */
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3); /* Adjust horizontal offset, vertical offset, blur radius, and color/opacity */
+}
+
