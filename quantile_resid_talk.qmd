@@ -1,13 +1,11 @@
 ---
 format: 
   revealjs:
-    theme: [default, UI_theme.scss]
+    theme: default
     aspectratio: 16x9
     slide-number: true
     css: custom.css
     embed-resources: true
-    includes: 
-      in-header: custom.html
 editor: source
 execute:
   echo: false
@@ -100,7 +98,7 @@ $$\eta_{ij} = log(\frac{\pi_{ij}} {1 - \pi_{ij}}  )$$
 Survival of insects after insecticide applications ($i^{th}$ treatment) across several different locations ($j^{th}$ random effect/hierarchal grouping). 
 :::
 
-## Raw Residuals from GLMMs Can Be Nonsensical
+## Standard Residuals from GLMMs Can Be Nonsensical
 
 ```{r}
 data("VerbAgg")
@@ -499,6 +497,8 @@ wildly, the outlier test is a 2-sided test. Are there enough outliers?
 ::: {.custom-blockquote}
 (G)LMMs are hard - harder than you may think based on what you may have learned in your second statistics class....
 :::
+
+<br>
 
 ::: {.right-align}
 #### *--Ben Bolker, [GLMM FAQ](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html)*
