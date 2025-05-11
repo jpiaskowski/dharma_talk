@@ -35,10 +35,9 @@ jobs:
         run: | 
           export GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}'
           quarto install tinytex
-          
-      - name: Render and Publish
-        run: quarto render quantile_resid_talk.qmd
+      
+      - name: Render Quarto Project
+        uses: quarto-dev/quarto-actions/render@v2
         with:
-          target: main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          to: html 
+        
