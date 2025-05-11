@@ -1,8 +1,10 @@
 ---
 format: 
   revealjs:
-    theme: simple
-    css: [custom.css, UI_theme.scss]
+    theme: [default, UI_theme.scss]
+    aspectratio: 16x9
+    slide-number: true
+    css: custom.css
     embed-resources: true
     includes: 
       in-header: custom.html
@@ -39,17 +41,20 @@ library(DHARMa); library(glmmTMB); library(performance); library(dplyr); library
 
 ## Linear Mixed Model
 
-$$\mathbf{Y = Xb + Za + \epsilon} $$
+$$Y_{ij} = X_i\beta + Z_ja + \epsilon_{ij} $$
 
 $$\epsilon \sim N(0, \sigma^2 \mathbf{I_n}) $$
 $$a \sim N(0, \sigma_a^2) $$
 
-$$ y_i|z_i \sim𝑁(x_i \beta, \sigma^2/r_i) $$
+$$ y_i|a_{j} \sim𝑁(x_i \beta + a_j, \sigma^2) $$
+
+$$ y_i \sim𝑁(x_i \beta, \sigma^2) $$
 
 ::: notes
 error terms 'iid'
 no association between mean and variance
 random terms normally distributed
+Gilman & Hill, 2007
 :::
 
 ## Standard Residual Plots
@@ -115,9 +120,10 @@ plot(m2)
 ***Different distributional assumptions and mathematical mean/variance relationships of some distributions require a different approach***
 </enter>
 
-::: footer
-**Exception:** log-linear models because the identity link function is used, thus $\mathbf{e} \sim N(0, \sigma^2) $
 
+
+::: {.custom-footer}
+**Exception:** log-linear models because the identity link function is used.
 :::
 
 
@@ -126,7 +132,7 @@ plot(m2)
 :::
 
 
-## Background
+## Background {.smaller}
 
 For $y_1,...,y_n$ responses:  
 
@@ -134,7 +140,7 @@ $$y_i \sim \mathcal{P}(\mu_i, \phi)$$
 
 CDF: $$F(y; \mu, \phi)$$ 
 
-For a continuous $F$, $F(y_i; \mu_i \phi)$ are uniformly distributed, and the quantile residuals are:
+For a continuous $F$, $F(y_i; \mu_i, \phi)$ are uniformly distributed, and the quantile residuals are:
 
 $$ r_{i} = \Phi^{-1} \left\{F(y_i; \hat{\mu_i}, \hat{\phi} )\right\}$$
 
@@ -144,7 +150,7 @@ r converges to a normal distribution when parameters are 'consistently' estimate
 Probit (inverse of normal dist) \Phi(x) returns a probability p, and \Phi^{-1}(p) returns the z-score
 :::
 
-::: footer
+::: {.custom-footer}
 Dunn KP, and GK Smyth (1996). Randomized quantile residuals. *Journal of Computational and Graphical Statistics* 5, 1-10.
 :::
 
@@ -200,15 +206,15 @@ $$b_i = F(y_i; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k \rfloor} \begin
 
 ## Method implemented in 'statmod'
 
-<img src="images/statmod_pkg.png" class="outlined-shadow-image" alt="Your Image">
+<img src="images/statmod_pkg.png" class="outlined-shadow-image" alt="Screenshot of statmod on CRAN">
 
 
 ## This Method Has Been Around
 
-<img src="images/statmod.png" class="outlined-shadow-image" alt="Your Image">
+<img src="images/statmod.png" class="outlined-shadow-image" alt="screenshot of 2003 statmod archive">
 
 
-::: footer
+::: {.custom-footer}
 First submitted to CRAN in February, 2003. 
 :::
 
@@ -220,8 +226,9 @@ functions available for many distributions: binomial, Poisson, neg bin, gamma, t
 
 ----------------------------------
 
-> Randomization is used to produce continuously distributed residuals when the response is discrete or has a discrete component. This means that the quantile residuals will vary from one realization to another for a given data set and fitted model.
-
+::: {.custom-blockquote}
+Randomization is used to produce continuously distributed residuals when the response is discrete or has a discrete component. This means that the quantile residuals will vary from one realization to another for a given data set and fitted model.
+:::
 
 ::: {.right-align}
 #### *--Smythe & Dunn (1996)*
@@ -254,6 +261,7 @@ Link function: $\eta = g(\mu)$
 
 ::: notes
 "G" is generalized term denoting any distribution with shape and scale parameters
+see GLMM book, table 1.4 (p24)
 :::
 
 
@@ -281,9 +289,11 @@ Can do this for different categorical variables and in some cases, for different
 $$ r_{ij} \sim Uniform(0,1) $$
 
 
-$ r_{ij} = 0$:  everything is larger    
-$ r_{ij} = 1$:  everything is smaller   
-$ r_{ij} = 0.5$:  right in the middle   
+$r_{ij} = 0$:  everything is larger 
+
+$r_{ij} = 1$:  everything is smaller   
+
+$r_{ij} = 0.5$:  right in the middle   
 
 
 DHARMa runs 250 simulations (per observation) by default, they recommend up to 1000
@@ -318,7 +328,7 @@ lines(x = c(0,yi), y = c(res, res), lwd = 2, lty = 2)
 text(8, 0.4, expression(paste(Y[i])))
 text(4, 0.8, expression(paste(r[i])))
 ```
-1.	For a sample size of 150 per group, cohen's D = 0.5 and alpha = 0.05, the power is 0.99
+
 ## Quantile Residuals for 1 Observation
 
 ```{r}
@@ -462,30 +472,33 @@ wildly, the outlier test is a 2-sided test. Are there enough outliers?
 
 ## Sources {.smaller}
 
-Bates DM, Maechler M, Bolker BM and S Walker (2015). "Fitting Linear Mixed-Effects Models Using lme4." *Journal of Statistical Software*, 67(1), 1-48. doi:10.18637/jss.v067.i01.
+- Bates DM, Maechler M, Bolker BM and S Walker (2015). "Fitting Linear Mixed-Effects Models Using lme4." *Journal of Statistical Software*, 67(1), 1-48. doi:10.18637/jss.v067.i01.
   
-Brooks ME, Kristensen K, van Benthem KJ, Magnusson A, Berg CW, Nielsen A, Skaug HJ, Maechler M and BM Bolker (2017). "glmmTMB Balances Speed and Flexibility Among Packages for Zero-inflated Generalized Linear Mixed Modeling." *The R Journal*, 9(2), 378-400. doi: 10.32614/RJ-2017-066.
+- Brooks ME, Kristensen K, van Benthem KJ, Magnusson A, Berg CW, Nielsen A, Skaug HJ, Maechler M and BM Bolker (2017). "glmmTMB Balances Speed and Flexibility Among Packages for Zero-inflated Generalized Linear Mixed Modeling." *The R Journal*, 9(2), 378-400. doi: 10.32614/RJ-2017-066.
 
-Dunn KP, and GK Smyth (1996). Randomized quantile residuals. *Journal of Computational and Graphical Statistics* 5, 1-10.
+- Dunn KP, and GK Smyth (1996). Randomized quantile residuals. *Journal of Computational and Graphical Statistics* 5, 1-10.
 
-Feng et al (2017). Randomized quantile residuals: an omnibus model diagnostic tool with unified reference distribution. *arXiv* <https://doi.org/10.48550/arXiv.1708.08527>
+- Feng et al (2017). Randomized quantile residuals: an omnibus model diagnostic tool with unified reference distribution. *arXiv* <https://doi.org/10.48550/arXiv.1708.08527>
 
 ## Sources {.smaller}
 
-Gelman A and J Hill (2007). *Data Analysis Using Regression and Multilevel/Hierarchical Models*. Cambridge University Press, New York.
+- Gelman A and J Hill (2007). *Data Analysis Using Regression and Multilevel/Hierarchical Models*. Cambridge University Press, New York.
 
-Hartig F (2022). DHARMa: Residual Diagnostics for Hierarchical (Multi-Level/Mixed) Regression Models. R package version 0.4.6, <https://CRAN.R-project.org/package=DHARMa>.
+- Hartig F (2022). DHARMa: Residual Diagnostics for Hierarchical (Multi-Level/Mixed) Regression Models. R package version 0.4.6, <https://CRAN.R-project.org/package=DHARMa>.
 
-Pinheiro JC and DM Bates (2000). *Mixed-Effects Models in S and S-PLUS*. Springer Verlag, New York.
+- Pinheiro JC and DM Bates (2000). *Mixed-Effects Models in S and S-PLUS*. Springer Verlag, New York.
 
-Stroup WW, Ptukhina M and J Garai (2024). *Generalize Linear Mixed Models: Modern Concepts, Methods and Applications*. CRC Press, Boca Raton. 
+- Stroup WW, Ptukhina M and J Garai (2024). *Generalize Linear Mixed Models: Modern Concepts, Methods and Applications*. CRC Press, Boca Raton. 
 
 
 ## 
 
+<br> 
 <br>
 
-> (G)LMMs are hard - harder than you may think based on what you may have learned in your second statistics class....
+::: {.custom-blockquote}
+(G)LMMs are hard - harder than you may think based on what you may have learned in your second statistics class....
+:::
 
 ::: {.right-align}
 #### *--Ben Bolker, [GLMM FAQ](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html)*

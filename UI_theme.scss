@@ -30,7 +30,11 @@ $mainfont: "Public Sans", !default;
 $headingFont: "Public Sans", !default;
 $linkColor: $ui-purple, !default;
 
-$mainFontSize: 0.7em, !default;
+$mainFontSize: 30px, !important;
+$heading1Size: 2.3em !important;
+$heading2Size: 1.4em !important;
+$heading3Size: 1.2em !important;
+$heading4Size: 1em !important;
 
 :root {
   --r-background-color: #{$backgroundColor};

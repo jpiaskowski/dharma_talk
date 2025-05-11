@@ -22,8 +22,14 @@
 }
  */
 
+.custom-footer {
+  text-align: center;
+  font-size: 20px;
+  position: absolute;
+  bottom: 5px;
+}
 
-.blockquote {
+.custom-blockquote {
   line-height: 1.5; /* Improve text readability */
   padding-top: 35px;
   padding: 1.5rem 1rem;
