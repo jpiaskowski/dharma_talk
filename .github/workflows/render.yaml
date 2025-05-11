@@ -38,4 +38,7 @@ jobs:
           
       - name: Render and Publish
         run: quarto render quantile_resid_talk.qmd
-        
+        with:
+          target: main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
