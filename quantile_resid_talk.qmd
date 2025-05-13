@@ -40,6 +40,35 @@ library(DHARMa); library(glmmTMB); library(performance); library(dplyr); library
 
 :::
 
+## Why Do We Need to Talk about Quantile Residuals
+
+::: {.custom-blockquote}
+Randomized quantile residual was proposed in the literature [in 1996] to circumvent the...problems in traditional residuals [for generalized linear models]. However, this approach has not gained deserved awareness and attention, partly due to the lack of extensive empirical studies to investigate its performance. 
+:::
+
+::: {.right-align}
+Feng et al, 2017
+:::
+
+*Deep Dive into quantile residuals for model evaluation and the most popular implementation of them, DHARMa.*
+
+## State of DHARMa
+
+- DHARMa was first released in 2016. CRAN downloads were sparse until 2019, and began steadily increasing. It averages approximately ~500 downloads per day (source: https://hadley.shinyapps.io/cran-downloads/)
+
+- It has reverse dependencies with 18 R packaged including **glmmTMB**, **performance**, **easystats**
+
+- DHARMa does not have a published peer reviewed manuscript paper supporing its release
+
+## Standard Residuals from GLMMs Can Be Nonsensical
+
+```{r}
+data("VerbAgg")
+m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
+            family = binomial, data = VerbAgg, nAGQ=0L)
+plot(m2)
+```
+
 ## Linear Mixed Model
 
 $$Y_{ij} = X_i\beta + Z_ja + \epsilon_{ij} $$
@@ -47,9 +76,9 @@ $$Y_{ij} = X_i\beta + Z_ja + \epsilon_{ij} $$
 $$\epsilon \sim N(0, \sigma^2 \mathbf{I_n}) $$
 $$a \sim N(0, \sigma_a^2) $$
 
-$$ y_i|a_{j} \sim𝑁(x_i \beta + a_j, \sigma^2) $$
+$$ y_i|a_{j} \sim 𝑁(x_i \beta + a_j, \sigma^2) $$
 
-$$ y_i \sim𝑁(x_i \beta, \sigma^2) $$
+$$ y_i \sim 𝑁(x_i \beta, \sigma^2) $$
 
 ::: notes
 error terms 'iid'
@@ -67,10 +96,10 @@ check_model(m1, check = c("linearity", "qq"), detrend=FALSE, alpha=0)
 ```
 
 ::: notes
-standard checks to verify the distribution
+standard checks we run to verify the distribution of y, the dependent variable
 :::
 
-## Standard Residuals 
+## 'Standard' Residuals 
 
 Raw
 $$\epsilon_i = Y_i - \hat{Y_i} $$
@@ -83,10 +112,14 @@ Pearson/Scaled:
 
 $$ \epsilon_i = \frac {Y_i - \hat{Y_i}} {sd(Y_i)}  $$
 
+::: notes
+reminder of 'standard' residuals
+
+:::
 
 ## GLMM Formulation (binomial example) 
 
-Dependent variable: $Y_{ij}$ (survived)
+Dependent variable: $Y_{ij}$ (e.g. survival)
 
 survival: $p_i = Y_i/N$
 
@@ -98,39 +131,38 @@ $$\eta_{ij} = \eta + \alpha_i + r_j$$
 $$\eta_{ij} = log(\frac{\pi_{ij}} {1 - \pi_{ij}}  )$$
 
 ::: notes
-Survival of insects after insecticide applications ($i^{th}$ treatment) across several different locations ($j^{th}$ random effect/hierarchal grouping). 
+Example: survival of insects after insecticide applications ($i^{th}$ treatment) across several different locations (jth random effect/hierarchal grouping). 
 :::
 
-## Standard Residuals from GLMMs Can Be Nonsensical
 
-```{r}
-data("VerbAgg")
-m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
-            family = binomial, data = VerbAgg, nAGQ=0L)
-plot(m2)
-```
 
 
 ## Raw/Scaled Residuals Can Lack Diagnostic Capabilities for GLMMs
 
 * Visual patterns are difficult to interpret
 * Over and under-dispersion are difficult to assess
-* Goodness of fit tests are not valid
+* Goodness of fit tests are not valid outside of normal-distriubuted variables
 
 <center>
 ***Different distributional assumptions and mathematical mean/variance relationships of some distributions require a different approach***
 </enter>
 
+::: notes
+From Liu and Zhang: 
 
+The conditional distribution (e.g., variance/range) of the residual variable varies across the values of $x_i$
 
-::: {.custom-footer}
-**Exception:** log-linear models because the identity link function is used.
+The unconditional distribution of residuals does not have an explicit form and it may vary depending on the distribution of $x_i$
 :::
 
 
 ::: {.r-stack background-color="#FDDC5C" logo=false}
-# The Original Quantile Residuals
+# The Original
+
+<img src="images/screenshot_original_paper.png" class="outlined-shadow-image" alt="Screenshot of original paper title">
+
 :::
+
 
 
 ## Background 
@@ -143,7 +175,7 @@ CDF: $$F(y; \mu, \phi)$$
 
 For a continuous $F$, $F(y_i; \mu_i, \phi)$ are uniformly distributed, and the quantile residuals are:
 
-$$ r_{i} = \Phi^{-1} \left\{F(y_i; \hat{\mu_i}, \hat{\phi} )\right\}$$
+$$ r_{i,q} = \Phi^{-1} \left\{F(y_i; \hat{\mu_i}, \hat{\phi} )\right\}$$
 
 ::: notes
 r converges to a normal distribution when parameters are 'consistently' estimated
@@ -169,7 +201,7 @@ $$ r_{i} = \Phi^{-1} \left\{  1-exp(y_i/\hat{\mu_i}) \right\}$$
 
 $$r_i = \Phi^{-1}(u_i)$$
 $$ u_i \sim Uniform(a_i, b_j]$$
-$$a_i = lim_{y \uparrow y_i} F(y; \hat{\mu_i}, \hat{\phi})$$
+$$a_i = lim_{y \rightarrow y_i} F(y; \hat{\mu_i}, \hat{\phi})$$
 
 $$ b_i = F(y_i; \hat{\mu_i}, \hat{\phi})  $$
 
@@ -179,30 +211,10 @@ b_i = Pr(Y <= y_i)
 
 (a, b]
 
-very small space, u is sampled from that space (uniform dist)
+continuous distribution: a = b
+discontinous dist: randomness added (small value, uniformly distributed)
 :::
 
-
-
-## Binomial Example 
-
-$$y_i \sim binomial(n, p_i) $$
-
-$$ \text{logit} (p_i) = \beta_0 + \beta_1x_i $$
-$$r_i = \Phi^{-1}(u_i)$$
-
-$$ u_i \sim Uniform(a_i, b_j] $$
-
-$$a_i = lim_{y \uparrow y_i} F(y; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k-1 \rfloor} \begin{pmatrix}
-  n \\
-  i
-\end{pmatrix} p_i(1-p)^{n-i}$$
-
-
-$$b_i = F(y_i; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k \rfloor} \begin{pmatrix}
-  n \\
-  i
-\end{pmatrix} p_i(1-p)^{n-i}$$
 
 
 ## Method implemented in 'statmod'
@@ -233,6 +245,8 @@ functions available for many distributions: binomial, Poisson, neg bin, gamma, t
 Randomization is used to produce continuously distributed residuals when the response is discrete or has a discrete component. This means that the quantile residuals will vary from one realization to another for a given data set and fitted model.
 :::
 
+<br>
+
 ::: {.right-align}
 #### *--Smythe & Dunn (1996)*
 :::
@@ -247,6 +261,7 @@ They recommend drawing at least 4 quantile samples per observation
 # DHARMa
 
 **(Diagnostics for HierArchical Regression Models)**
+<img src="images/dharma_cran.png" class="outlined-shadow-image" alt="Screenshot of dharma on CRAN">
 
 :::
 
@@ -273,8 +288,7 @@ see GLMM book, table 1.4 (p24)
 
 *For each observation in the data set:*
 
-2. Simulate new observations using fitted value as the mean and model parameters (e.g. shape, scale) for the other distributional parameters.
-
+2. Simulate new observations ($n_{sim} = n_{data}$) using fitted values as the model distributional parameters (e.g. shape, scale) as appropriate. 
 $$ Y_i \sim G(\hat{\mu_i}, \hat{\phi}) $$
 
 3. Calculate the quantile for the cumulative distribution function 
@@ -364,7 +378,7 @@ abline(v = mean(sims), lwd = 2, lty = 2, col = "red2")
 
 ## Poisson GLMM Example
 
-Create a data set with a random effect ("group", 10 levels), a covariate ("Enviroinment1") and a Poisson-distributed response variable ("observedResponse"): 
+Create a data set with a random effect ("group", 10 levels), a covariate ("Environment1") and a Poisson-distributed response variable ("observedResponse"): 
 
 ```{r, echo=TRUE}
 testData = createData(sampleSize = 500)
@@ -399,9 +413,9 @@ sr <- simulateResiduals(rightModel, plot = TRUE)
 
 ::: notes
 - Kolmogorov-Smirnov test (`ks.test()`, `punif()`) against a uniform distribution (0, 1)
-- disperion test:
+- dispersion test: compares the variance in observations to the variance of the simulations, bootstrap approach-- the p-val is the actually number of times a data seet of observed value exceeds an expectation (or is below or both)
 - outlier test (2-sided by default): "DHARMa residuals are created by simulating from the fitted model, and comparing the simulated values to the observed data. It can occur that all simulated values are higher or smaller than the observed data, in which case they get the residual value of 0 and 1, respectively" --- these are DHARMa 'outliers'. No info on magnitude of these. Outlier test uses the binomial test (`binom.test()`) of the number of outliers relative to the data set size and the prob is set as 1/(nSim +1) (so P decreases an nsim increases). Other optons for integer dists w/ n<500 run a bootstrap: manually calculate how often an obs is outlier in an data set compared to in a bootstrap
-- quantile tests: fits splines (`qgam::qgam()`) at 0.25, 0.5 and 0.75 quantiles and looks for deviations from the expectation of a flat line, does a BH adjustment
+- quantile tests: fits splines (`qgam::qgam()`) at 0.25, 0.5 and 0.75 quantiles and looks for deviations from the expectation of a flat line (), does a BH adjustment
 :::
 
 ## Quantile Residuals
@@ -433,26 +447,63 @@ hist(qres2, main = "Incorrectly Specified Model", col = "#AFE4DE", xlab = "Rando
 
 ## Notes on DHARMa Implementation
 
-- It depends on the simulation functions build into GLMM package (supported packages: lme4, glmmTMB, ...)
-- Commonly, only the last stochastic level (e.g. Poisson) is simulated, conditional on the fitted random effects - basically an omnibus test
+- It depends on the simulation functions build into GLMM package 
+- Supported packages: `lm()`, `glm(), **lme4**, **mgcv**, **glmmTMB**
+**spaMM**, **GLMMadaptive**, **brms**, & more
+- Commonly, only the last stochastic level (e.g. Poisson) is simulated, conditional on the fitted random effects -- basically an omnibus test
 - Residuals can be simulated for individuals predictors and tests can be conducted for individual factors
-- for any kind of autocorrelation, conditional simulations are a must so that plots don't indicate patterns or the tests fail due to autocorrelation
+
 
 
 ::: notes
 from DHARMa::simulateResiduals(): If the model is correctly specified, the simulated residuals should be flat regardless how many hierarchical levels we re-simulate. The most thorough procedure would therefore be to test all possible options. If testing only one option, I would recommend to re-simulate all levels, because this essentially tests the model structure as a whole. This is the default setting in the DHARMa package. A potential drawback is that re-simulating the lower-level random effects creates more variability, which may reduce power for detecting problems in the upper-level stochastic processes. In particular dispersion tests may produce different results when switching from conditional to unconditional simulations, and often the conditional simulation is more sensitive.
 :::
 
-## Conditional and Marginal Models
 
-**In Progress**
 
-(focus on lme4::glmer() and glmmTMB)
+## `lme4::glmer()` Marginal Model
+
+By default, simulations are conducted on a marginal model: 
+```{r, echo=TRUE, eval=FALSE}
+rightModel <- glmer(observedResponse ~ Environment1 + (1|group) , 
+                     family = "poisson", data = testData)
+sr <- simulateResiduals(rightModel, re.form = NA, plot = TRUE)
+```
+
+```{r}
+plot(sr)
+```
+
+## `lme4::glmer()` Conditional Model
+
+Use `re.form` argument in `glmer()` to resimulate the data.
+
+```{r, echo=TRUE}
+res2 <- simulateResiduals(fittedModel = rightModel, re.form = NULL, plot = TRUE)
+```
+
+## glmmTMB Marginal Models 
+
+The implementation is a very recent addition and lacks clear documention (see the entire [discussion](https://github.com/glmmTMB/glmmTMB/issues/888)).
+
+
+```{r, echo=TRUE}
+data("sleepstudy", package = "lme4")
+m1 <- glmmTMB(Reaction ~ Days  + (Days|Subject), sleepstudy)
+m1_res <- simulateResiduals(m1, plot = TRUE)
+```
+## Marginal Model
+
+Set the simulation conditions for a *glmmTMB* object. The object is altered in place, hence why it's copied here.  
+```{r, echo=TRUE}
+m2 <- m1
+set_simcodes(m2$obj, val = "fix")
+m2_res <- simulateResiduals(m1, plot = TRUE)
+```
 
 ## Other Functionality 
 
 *(Implemented in DHARMa)* 
-
 
 * Uniformity test
 * Quantile location tesy
@@ -465,32 +516,59 @@ from DHARMa::simulateResiduals(): If the model is correctly specified, the simul
 wildly, the outlier test is a 2-sided test. Are there enough outliers?
 :::
 
-## Best Practices
-
-- Use quantile residuals because they are a better diagnostic feature for checking model fit
-- Many of the tests are quite useful (but, as always, don't rely on absolute threshold)
-- Outlier test results should be treated with caution
--  **RTFM**: read the DHARMa vignette; it is very helpful!
-- ....More
+## Best Practices 
 
 
-## Sources {.smaller}
+- Feng et al (2018) demonstrated for many simulated scenarios that quantile residuals are a better diagnostic tool for checking model distribution, model parameters, over/under dispersion, and overall lack of fit of GLMMs than 'standard' residuals. 
+- The plot of residuals versus fitted is the most reliable indicator of a properly specified model
+- We do not know their overall sensitivity of this time to modest model misspecifications
+
+- Results from quantiles tests for uniformity should be treated with caution - no pattern proves a model is correct; likewise, nonrandom matterns are not always a deal-breaker
+- Outliers identified are warnings of possible outliers and lack quantitative information
+
+
+## Sources 
 
 - Bates DM, Maechler M, Bolker BM and S Walker (2015). "Fitting Linear Mixed-Effects Models Using lme4." *Journal of Statistical Software*, 67(1), 1-48. doi:10.18637/jss.v067.i01.
   
 - Brooks ME, Kristensen K, van Benthem KJ, Magnusson A, Berg CW, Nielsen A, Skaug HJ, Maechler M and BM Bolker (2017). "glmmTMB Balances Speed and Flexibility Among Packages for Zero-inflated Generalized Linear Mixed Modeling." *The R Journal*, 9(2), 378-400. doi: 10.32614/RJ-2017-066.
 
+::: {style="background-color: #fdfd96"}
+
 - Dunn KP, and GK Smyth (1996). Randomized quantile residuals. *Journal of Computational and Graphical Statistics* 5, 1-10.
 
 - Feng et al (2017). Randomized quantile residuals: an omnibus model diagnostic tool with unified reference distribution. *arXiv* <https://doi.org/10.48550/arXiv.1708.08527>
 
+:::
+
 - Gelman A and J Hill (2007). *Data Analysis Using Regression and Multilevel/Hierarchical Models*. Cambridge University Press, New York.
 
+
+## Sources 
+
+::: {style="background-color: #fdfd96"}
+- Gerber EAE and BA Craig (2024) Residuals and diagnostics for multinomial regression models. *Statistical Analysis and Data Mining: An ASA Data Science Journal* 17:e11645. <https://doi.org/10.1002/sam.11645>
+::: 
+
+
 - Hartig F (2022). DHARMa: Residual Diagnostics for Hierarchical (Multi-Level/Mixed) Regression Models. R package version 0.4.6, <https://CRAN.R-project.org/package=DHARMa>.
+
+::: {style="background-color: #fdfd96"}
+- Liu D, Zhang H (2018) Residuals and Diagnostics for Ordinal Regression Models: A Surrogate Approach. J Am Stat Assoc 113:845–854. https://doi.org/10.1080/01621459.2017.1292915
+
+:::
 
 - Pinheiro JC and DM Bates (2000). *Mixed-Effects Models in S and S-PLUS*. Springer Verlag, New York.
 
 - Stroup WW, Ptukhina M and J Garai (2024). *Generalize Linear Mixed Models: Modern Concepts, Methods and Applications*. CRC Press, Boca Raton. 
+
+## Final Thoughts
+
+- - There is a lack of information on using quantile residuals in a mixed model context and the uses of conditional versus marginal residuals
+-  **RTFM**: read the [DHARMa vignette](https://CRAN.R-project.org/package=DHARMa) and when needed, function documentation. Not all all R code documentation is well written and helpful, but this package is very helpful.
+- The quantile residuals described herein do not apply to multinomial models. An extension of quantile residuals for these models has been developed, but it lacks an easy implememtation. 
+
+
 
 
 ----------------------------------------------
@@ -506,3 +584,43 @@ wildly, the outlier test is a 2-sided test. Are there enough outliers?
 ::: {.right-align}
 #### *--Ben Bolker, [GLMM FAQ](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html)*
 :::
+
+## Binomial Example 
+
+$$y_i \sim binomial(n, p_i) $$
+
+$$ \text{logit} (p_i) = \beta_0 + \beta_1x_i $$
+$$r_i = \Phi^{-1}(u_i)$$
+
+$$ u_i \sim Uniform(a_i, b_j] $$
+
+$$a_i = lim_{y \uparrow y_i} F(y; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k-1 \rfloor} \begin{pmatrix}
+  n \\
+  i
+\end{pmatrix} p_i(1-p)^{n-i}$$
+
+
+$$b_i = F(y_i; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k \rfloor} \begin{pmatrix}
+  n \\
+  i
+\end{pmatrix} p_i(1-p)^{n-i}$$
+
+
+## Consider Groups
+
+This is the 'wrong model' (missing 'environment'), but the plot looks okay
+
+```{r, echo=TRUE}
+wrongModel2 <- glmer(observedResponse ~ 1 + (1|group), 
+                     family = "poisson", data = testData)
+res2 <- simulateResiduals(wrongModel2, plot = TRUE)
+```
+
+## Consider Groups
+
+When plotted by the missing group:
+
+```{r, echo=TRUE}
+plotResiduals(res2, form = testData$Environment1)
+```
+
