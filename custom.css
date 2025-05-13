@@ -11,7 +11,9 @@
   z-index: 2;
 }
 
-
+.reveal .smaller {
+  font-size: 85% !important;
+}
 
 .custom-footer {
   text-align: center;

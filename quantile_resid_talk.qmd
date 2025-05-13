@@ -40,14 +40,14 @@ library(DHARMa); library(glmmTMB); library(performance); library(dplyr); library
 
 :::
 
-## Why Do We Need to Talk about Quantile Residuals
+## Why?
 
 ::: {.custom-blockquote}
 Randomized quantile residual was proposed in the literature [in 1996] to circumvent the...problems in traditional residuals [for generalized linear models]. However, this approach has not gained deserved awareness and attention, partly due to the lack of extensive empirical studies to investigate its performance. 
 :::
 
 ::: {.right-align}
-Feng et al, 2017
+#### *--Feng et al, 2017*
 :::
 
 *Deep Dive into quantile residuals for model evaluation and the most popular implementation of them, DHARMa.*
@@ -87,17 +87,7 @@ random terms normally distributed
 Gilman & Hill, 2007
 :::
 
-## Standard Residual Plots
 
-```{r}
-data(warpbreaks)
-m1 <- lm(log(breaks) ~ wool*tension, data = warpbreaks)
-check_model(m1, check = c("linearity", "qq"), detrend=FALSE, alpha=0)
-```
-
-::: notes
-standard checks we run to verify the distribution of y, the dependent variable
-:::
 
 ## 'Standard' Residuals 
 
@@ -117,7 +107,7 @@ reminder of 'standard' residuals
 
 :::
 
-## GLMM Formulation (binomial example) 
+## GLMM Formulation: Binomial Example 
 
 Dependent variable: $Y_{ij}$ (e.g. survival)
 
@@ -143,9 +133,10 @@ Example: survival of insects after insecticide applications ($i^{th}$ treatment)
 * Over and under-dispersion are difficult to assess
 * Goodness of fit tests are not valid outside of normal-distriubuted variables
 
-<center>
-***Different distributional assumptions and mathematical mean/variance relationships of some distributions require a different approach***
-</enter>
+<br> 
+
+*Different distributional assumptions and mathematical mean/variance relationships of some distributions require a different approach*
+
 
 ::: notes
 From Liu and Zhang: 
@@ -153,6 +144,7 @@ From Liu and Zhang:
 The conditional distribution (e.g., variance/range) of the residual variable varies across the values of $x_i$
 
 The unconditional distribution of residuals does not have an explicit form and it may vary depending on the distribution of $x_i$
+
 :::
 
 
@@ -527,7 +519,7 @@ wildly, the outlier test is a 2-sided test. Are there enough outliers?
 - Outliers identified are warnings of possible outliers and lack quantitative information
 
 
-## Sources 
+## Sources  {.smaller}
 
 - Bates DM, Maechler M, Bolker BM and S Walker (2015). "Fitting Linear Mixed-Effects Models Using lme4." *Journal of Statistical Software*, 67(1), 1-48. doi:10.18637/jss.v067.i01.
   
@@ -544,7 +536,7 @@ wildly, the outlier test is a 2-sided test. Are there enough outliers?
 - Gelman A and J Hill (2007). *Data Analysis Using Regression and Multilevel/Hierarchical Models*. Cambridge University Press, New York.
 
 
-## Sources 
+## Sources {.smaller}
 
 ::: {style="background-color: #fdfd96"}
 - Gerber EAE and BA Craig (2024) Residuals and diagnostics for multinomial regression models. *Statistical Analysis and Data Mining: An ASA Data Science Journal* 17:e11645. <https://doi.org/10.1002/sam.11645>
@@ -564,7 +556,7 @@ wildly, the outlier test is a 2-sided test. Are there enough outliers?
 
 ## Final Thoughts
 
-- - There is a lack of information on using quantile residuals in a mixed model context and the uses of conditional versus marginal residuals
+- There is a lack of information on using quantile residuals in a mixed model context and the uses of conditional versus marginal residuals
 -  **RTFM**: read the [DHARMa vignette](https://CRAN.R-project.org/package=DHARMa) and when needed, function documentation. Not all all R code documentation is well written and helpful, but this package is very helpful.
 - The quantile residuals described herein do not apply to multinomial models. An extension of quantile residuals for these models has been developed, but it lacks an easy implememtation. 
 
@@ -624,3 +616,14 @@ When plotted by the missing group:
 plotResiduals(res2, form = testData$Environment1)
 ```
 
+## Standard Residual Plots
+
+```{r}
+data(warpbreaks)
+m1 <- lm(log(breaks) ~ wool*tension, data = warpbreaks)
+check_model(m1, check = c("linearity", "qq"), detrend=FALSE, alpha=0)
+```
+
+::: notes
+standard checks we run to verify the distribution of y, the dependent variable
+:::
