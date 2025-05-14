@@ -72,7 +72,7 @@ Randomized quantile residual was proposed in the literature [in 1996] to circumv
 
 - It has reverse dependencies with 18 R packages including **glmmTMB**, **performance**, **easystats**.
 
-- DHARMa does not have a published peer reviewed manuscript paper supporting its release.
+- DHARMa does not have a published peer-reviewed manuscript supporting its release.
 
 ## Linear Mixed Model
 
@@ -110,14 +110,6 @@ $$ \bar{y_{i.}} \sim 𝑁(x_i \beta, \sigma_a^2 + \sigma^2/r_i) $$
 - Gelman & Hill, 2007
 :::
 
-## Standard Residuals from GLMMs Can Be Nonsensical
-
-```{r, echo=TRUE}
-data("VerbAgg", package = "lme4")
-m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
-            family = binomial, data = VerbAgg, nAGQ=0L)
-plot(m2)
-```
 
 ## 'Standard' Residuals 
 
@@ -136,7 +128,14 @@ $$ \epsilon_i = \frac {Y_i - \hat{Y_i}} {sd(Y_i)}  $$
 reminder of 'standard' residuals
 :::
 
+## Standard Residuals from GLMMs Can Be Nonsensical
 
+```{r, echo=TRUE}
+data("VerbAgg", package = "lme4")
+m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
+            family = binomial, data = VerbAgg, nAGQ=0L)
+plot(m2, cex.axis = cex_axis, cex.lab = cex_lab)
+```
 
 ## Raw/Scaled Residuals Can Lack Diagnostic Capabilities for GLMMs
 
@@ -190,6 +189,7 @@ For a discontinous $F$:
 - (a, b]
 
 For a continuous $F$:
+
 - $a=b$  
 - $F(y_i; \mu_i, \phi)$ are uniformly distributed if the model is correct; and   
 - the quantile residuals are:
@@ -218,6 +218,8 @@ Probit (inverse of normal dist) \Phi(x) returns a probability p, and \Phi^{-1}(p
 
 ::: notes
 functions available for many distributions: binomial, Poisson, neg bin, gamma, tweedie
+
+around 2000 downloads per day for the last 3 years
 :::
 
 
@@ -255,7 +257,7 @@ They recommend drawing at least 4 quantile samples per observation
 
 
 $$\mathbf{Y = X\beta+Za}$$
-$$ \mathbf{Y|a\sim G(\mu, R)} $$
+$$ \mathbf{Y|a\sim \mathcal{P}(\mu, \phi)} $$
 linear predictor: $\mathbf{\eta = X\beta}$
 
 fitted value: $E(Y) = \mu$
@@ -279,7 +281,7 @@ $$ Y_i \sim \mathcal{P}(\hat{\mu_i}, \hat{\phi}) $$
 
 $$ r_{i,q} = F(y_i; \hat{\mu_i}, \hat{\phi} )$$
 
-**Count variables**: add a random value $\sim U(a, b)$
+**Count variables**: add a random value $\sim \mathcal{U}(a, b)$
 
 $a =$ empirical probability simulated values are less than observed
 
@@ -380,6 +382,10 @@ wrongModel <- lmer(observedResponse ~ Environment1 + (1|group) ,
                      data = testData)
 ```
 
+```{r}
+hist(testData$observedResponse, main = NULL, ylab=NULL, xlab=NULL)
+```
+
 ## 'Standard' Residuals
 
 ```{r}
@@ -399,8 +405,8 @@ sr <- simulateResiduals(rightModel, plot = TRUE)
 ## What's in the Plots? 
 
 1. x-axis: rank-transformed predictions, `rank(preds)/max(rank)` (ties method = "average")
-1. Kolmogorov-Smirnov test for Uniformity (`ks.test()`) against a uniform distribution, (0, 1)
-1. dispersion test: compares the variance in observations to the variance of the simulations, bootstrap approach-- the p-val is the actually number of times a data seet of observed value exceeds an expectation (or is below or both)
+1. Kolmogorov-Smirnov test for uniformity (`ks.test()`) against a uniform distribution, (0, 1)
+1. Dispersion test: compares the variance in observations to the variance of the simulations; bootstrap approach: the p-val is the frequency a data set of observed value exceeds or is below an expectation (two-sided tests both)
 1. Outliers and outlier test: outliers are residual values of 0 or 1.  Outlier test uses the binomial test (`binom.test()`, evaluating if the number of outliers is appropriate for the data set size (expectation: n = 1/(nSim +1).
 1. Quantile tests: fits splines (`qgam::qgam()`) at 0.25, 0.5 and 0.75 quantiles and tests for deviations from the expectation of a flat line, using a Benjamini-Hochberg adjustment.
 
@@ -441,7 +447,7 @@ hist(qres2, main = "Incorrectly Specified Model", col = "#AFE4DE", xlab = "Rando
 ## Notes on DHARMa Implementation
 
 - It depends on the simulation functions build into GLMM package 
-- Supported packages: `lm()`, `glm(), **lme4**, **mgcv**, **glmmTMB**, **spaMM**, **GLMMadaptive**, **brms**, & more
+- Supported packages: `lm()`, `glm()`, **lme4**, **mgcv**, **glmmTMB**, **spaMM**, **GLMMadaptive**, **brms**, & more
 - Commonly, only the last stochastic level (e.g. Poisson) is simulated, conditional on the fitted random effects -- basically an omnibus test
 - Residuals can be simulated for individuals predictors and tests can be conducted for individual factors (highly recommended!)
 - There are other tests for spatial and temporal autocorrelation, zero-inflation, over/under dispersion tests
@@ -494,7 +500,7 @@ m2_res <- simulateResiduals(m1, plot = TRUE)
 
 ## Best Practices 
 
-- Feng et al (2018) demonstrated for many scenarios (misspecified models for gamma, neg bin, Poisson and zero-inflated models) that quantile residuals are a better diagnostic tool for checking model distribution, model parameters, over/under dispersion, and overall lack of fit of GLMMs than 'standard' residuals. 
+- Feng et al (2017) demonstrated for many scenarios (misspecified models for gamma, neg bin, Poisson and zero-inflated models) that quantile residuals are a better diagnostic tool for checking model distribution, model parameters, over/under dispersion, and overall lack of fit of GLMMs than 'standard' residuals. 
 - The plot of residuals versus fitted is the most reliable indicator of a properly specified model (Feng et al 2017).
 - We do not know their overall sensitivity to modest model misspecifications.
 - Results from quantiles tests for uniformity should be treated with caution - no pattern proves a model is correct; likewise, non-random patterns are not always a deal-breaker.
