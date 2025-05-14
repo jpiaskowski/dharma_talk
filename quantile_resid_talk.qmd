@@ -501,8 +501,8 @@ m2_res <- simulateResiduals(m1, plot = TRUE)
 ## Best Practices 
 
 - Feng et al (2017) demonstrated for many scenarios (misspecified models for gamma, neg bin, Poisson and zero-inflated models) that quantile residuals are a better diagnostic tool for checking model distribution, model parameters, over/under dispersion, and overall lack of fit of GLMMs than 'standard' residuals. 
-- Fully conditional simulations are recommended for an omnibot us diagnostic; if the model is correct, this should matter, but the conditional simulation is more sensitive.
-- We do not know their verall sensitivity to modest model misspecifications.
+- Fully conditional simulations are recommended for an omnibus diagnostic; if the model is correct, this should no matter, but the conditional simulation is more sensitive.
+- We do not know their overall sensitivity to modest model misspecifications.
 - Results from quantiles tests for uniformity should be treated with caution - no pattern proves a model is correct; likewise, non-random patterns are not always a deal-breaker.
 - Outliers identified are warnings of possible outliers and lack quantitative information.
 
