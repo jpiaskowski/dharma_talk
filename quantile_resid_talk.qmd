@@ -94,7 +94,7 @@ $$y_{ij} = x_i\beta + Z_ja + \epsilon_{ij} $$
 $$\epsilon \sim N(0, \sigma^2 \mathbf{I_n}) $$
 $$a \sim N(0, \sigma_a^2 \mathbf{I_r}) $$
 
-$$ \bar{y_{i.}}|a_{j} \sim 𝑁(x_i \beta + a_j, \sigma^2) $$
+$$ \bar{y_{i.}}|a_{j} \sim 𝑁(x_i \beta + a_j, \sigma^2/r_i) $$
 
 $$ \bar{y_{i.}} \sim 𝑁(x_i \beta, \sigma_a^2 + \sigma^2/r_i) $$
 :::
