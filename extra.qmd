@@ -1,0 +1,82 @@
+---
+title: "Extra Slides"
+format: html
+---
+
+## Binomial Example 
+
+$$y_i \sim binomial(n, p_i) $$
+
+$$ \text{logit} (p_i) = \beta_0 + \beta_1x_i $$
+$$r_i = \Phi^{-1}(u_i)$$
+
+$$ u_i \sim Uniform(a_i, b_j] $$
+
+$$a_i = lim_{y \uparrow y_i} F(y; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k-1 \rfloor} \begin{pmatrix}
+  n \\
+  i
+\end{pmatrix} p_i(1-p)^{n-i}$$
+
+
+$$b_i = F(y_i; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k \rfloor} \begin{pmatrix}
+  n \\
+  i
+\end{pmatrix} p_i(1-p)^{n-i}$$
+
+
+## Consider Groups
+
+This is the 'wrong model' (missing 'environment'), but the plot looks okay
+
+```{r, echo=TRUE}
+wrongModel2 <- glmer(observedResponse ~ 1 + (1|group), 
+                     family = "poisson", data = testData)
+res2 <- simulateResiduals(wrongModel2, plot = TRUE)
+```
+
+## Consider Groups
+
+When plotted by the missing group:
+
+```{r, echo=TRUE}
+plotResiduals(res2, form = testData$Environment1)
+```
+
+## Standard Residual Plots
+
+```{r}
+data(warpbreaks)
+m1 <- lm(log(breaks) ~ wool*tension, data = warpbreaks)
+check_model(m1, check = c("linearity", "qq"), detrend=FALSE, alpha=0)
+```
+
+::: notes
+standard checks we run to verify the distribution of y, the dependent variable
+:::
+
+## Example: Survival Times of Cancer Patients
+
+Survival: $y_i \sim Exp(\mu_i)$
+
+$$ \text{log }\mu_i =  \beta_0 + \beta_1 \text{ log } x_i  $$
+
+Quantile residuals:
+
+$$ r_{i} = \Phi^{-1} \left\{  1-exp(y_i/\hat{\mu_i}) \right\}$$
+
+## GLMM Formulation: Binomial Example 
+
+Dependent variable: $Y_{ij}$ (e.g. survival)
+
+survival: $p_i = Y_i/N$
+
+$$Y_{ij}|r_j \sim Binomial(N, \pi_{ij})$$
+
+$$\eta_{ij} = \eta + \alpha_i + r_j$$
+($\eta$ = mean, $\alpha_i$ = treatment, $r_j$ = grouping variable)
+
+$$\eta_{ij} = log(\frac{\pi_{ij}} {1 - \pi_{ij}}  )$$
+
+::: notes
+Example: survival of insects after insecticide applications ($i^{th}$ treatment) across several different locations (jth random effect/hierarchal grouping). 
+:::
