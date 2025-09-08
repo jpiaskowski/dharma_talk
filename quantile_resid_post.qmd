@@ -9,7 +9,7 @@ library(DHARMa); library(glmmTMB); library(performance); library(dplyr); library
 
 > Randomized quantile residual was proposed in the literature [in 1996] to circumvent the...problems in traditional residuals [for generalized linear models]. However, this approach has not gained deserved awareness and attention, partly due to the lack of extensive empirical studies to investigate its performance. 
 > 
-> *--Feng et al, 2017*
+> *--Feng et al, [-@Feng2017]*
 
 
 Assessing if a generalized linear mixed model (GLMM) is appropriately specified for a given data set and data generating process is challenging since often GLMMs have no defined distribution for model residuals. In a (general) linear mixed modelling context under the following conditions:
@@ -115,7 +115,7 @@ $$b_i = F(y_i; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k \rfloor} \begin
 
 
 > Randomization is used to produce continuously distributed residuals when the response is discrete or has a discrete component. This means that the quantile residuals will vary from one realization to another for a given data set and fitted model.
-> *--Smythe & Dunn (1996)*
+> *--Dunn & Smythe (-@Dunn1996)*
 
 They originally recommend running *at least* 4 quantile samples per observation. 
 
@@ -155,7 +155,7 @@ $$ Y_i \sim G(\hat{\mu_i}, \hat{\phi}) $$
 
 $$ r_{i} = F(y_i; \hat{\mu_i}, \hat{\phi} )$$
 
-This process is valid for Gaussian-distributed variables. DHARMa runs 250 simulations (per observation) by default; the documentation recommends running up to 1000 simulations per observation in the data set. 
+This process is valid for Gaussian-distributed variables. DHARMa runs 250 simulations per observation by default; the documentation recommends running up to 1000 simulations per observation in the data set. 
 
 ### Expectations of the Quantile Residuals
 
@@ -291,7 +291,7 @@ wr <- simulateResiduals(wrongModel, plot = TRUE)
 
 ### DHARMa Output
 
-The qq-plot on the left is comparing observed residual "quantiles" (these are actually probabilies) with expected quantiles that were generated assuming a uniform distribution (0, 1) simulated with `punif()`. The "KS Test" is a Kolmogorov-Smirnov test, using the function `ks.test()`.   
+The qq-plot on the left is comparing observed residual "quantiles" (these are actually probabilies) with expected quantiles that were generated assuming a uniform distribution (0, 1) simulated with `stats::punif()`. The "KS Test" is a Kolmogorov-Smirnov test, using the function `stats::ks.test()`.   
 
 The "Dispersion test" is ....
 
@@ -308,24 +308,23 @@ bn
 
 ### Notes on DHARMa Implementation 
 
-- It depends on the simulation functions build into GLMM package (supported packages: lme4, glmmTMB, ...)
-- Commonly, only the last stochastic level (e.g. Poisson) is simulated, conditional on the fitted random effects - basically an omnibus test
+Functionality in DHARMa depends on the simulation functions build into GLMM package that is being supported and what options are available through that package. Commonly, only the last stochastic level (e.g. Poisson) is simulated, conditional on the fitted random effects, basically an omnibus test. 
 - Residuals can be simulated for individuals predictors and tests can be conducted for individual factors
 - for any kind of autocorrelation, conditional simulations are a must so that plots don't indicate patterns or the tests fail due to autocorrelation
 - Supported packages/function: `lm()`, `glm()`, **lme4**, **glmmTMB**, **GLMMadaptive**, **mgcv**, **spaMM**, **mgcv**, **gamm4**, **brms**, and more
 
 
 
-> : If the model is correctly specified, the simulated residuals should be flat regardless how many hierarchical levels we re-simulate. The most thorough procedure would therefore be to test all possible options. If testing only one option, I would recommend to re-simulate all levels, because this essentially tests the model structure as a whole. This is the default setting in the DHARMa package. A potential drawback is that re-simulating the lower-level random effects creates more variability, which may reduce power for detecting problems in the upper-level stochastic processes. In particular dispersion tests may produce different results when switching from conditional to unconditional simulations, and often the conditional simulation is more sensitive.
-> *--F. Hartig, DHARMA Manual* from DHARMa::simulateResiduals()
+> If the model is correctly specified, the simulated residuals should be flat regardless how many hierarchical levels we re-simulate. The most thorough procedure would therefore be to test all possible options. If testing only one option, I would recommend to re-simulate all levels, because this essentially tests the model structure as a whole. This is the default setting in the DHARMa package. A potential drawback is that re-simulating the lower-level random effects creates more variability, which may reduce power for detecting problems in the upper-level stochastic processes. In particular dispersion tests may produce different results when switching from conditional to unconditional simulations, and often the conditional simulation is more sensitive.
+> *--F. Hargtig, DHARMA Manual* [-@dharma]
 
 ### Conditional and Marginal Models
 
-- Only fully supported for **lme4**, partially supported for **glmmTMB** (see [GitHub issue]() for more details)
+Conidtional models where the predictions are conditioned on the random Only fully supported for **lme4**, partially supported for **glmmTMB** (see [GitHub issue](https://github.com/glmmTMB/glmmTMB/issues/888) for more details)
 
 
 > A potential drawback is that re-simulating the lower-level random effects creates more variability, which may reduce power for detecting problems in the upper-level stochastic processes. In particular dispersion tests may produce different results when switching from conditional to unconditional simulations, and often the conditional simulation is more sensitive.
-> *--F. Hartig, DHARMA Manual*
+> *--F. Hartig, DHARMA Manual [@dharma]*
 
 
 ```{r, echo=TRUE,eval=FALSE}
@@ -349,7 +348,4 @@ r2 <- simulateResiduals(m2, plot=TRUE, n = 50)
 
 Randomized quantile residuals are a useful model diagnostic tool. The package documentation is extensive and detailed; reading this will enhance user's understanding of how to best use DHARMa and interpret its output.Although the hypothesis tests conducted by DHARMa provide an easy decision making tool, recall that no hypothesis provides an unambiguous answer. Outlier test results in particular should be treated with caution and not strictly diagnostic for individual observations.  It should be noted that at this time, there is a lack of information on their performance and reliability across a broad range of conditions. The sensitivity of these residuals to modest model mis-specifications is unknown. 
 
-
-> (G)LMMs are hard - harder than you may think based on what you may have learned in your second statistics class....
-> *--Ben Bolker, [GLMM FAQ](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html)*
 
