@@ -4,6 +4,7 @@ title: "Using Randomized Quantile Residuals to Assess Model Fit of Generalized L
 
 ```{r}
 #| include: false
+#| echo: true
 library(DHARMa); library(glmmTMB); library(performance); library(dplyr); library(lme4)
 ```
 
@@ -15,9 +16,12 @@ library(DHARMa); library(glmmTMB); library(performance); library(dplyr); library
 Assessing if a generalized linear mixed model (GLMM) is appropriately specified for a given data set and data generating process is challenging since often GLMMs have no defined distribution for model residuals. In a (general) linear mixed modelling context under the following conditions:
 
 $$\mathbf{Y = Xb + Za + \epsilon} $$
+Where $\mathbf{Y}$ is a vector of the values for the dependent variable, $\mathbf{X}$ and $\mathbf{Z}$ are the design matrices for fixed and random effects, respectively; $\mathbf{b}$ and $\mathbf{a}$ are the slopes for the fixed effects and random effects, respectively. Both the residuals and random effects are assumed to follow a normal distribution with parameters for their respective variances. Random effects do not strictly have to follow a normal distribution, but that is the most common way to treat random effects. 
+
 $$\epsilon_i \sim N(0, \sigma^2 \mathbf{I_n}) $$
 $$a \sim N(0, \sigma_a^2) $$
-$$ y_i|z_i \sim𝑁(x_i \beta, \sigma^2/r_i) $$
+The conditional distribution of the response variable, $y_i|a_i$
+$$ y_i|a_i \sim𝑁(x_i \beta, \sigma^2/r_i) $$
 
 The residuals, $\epsilon_i= \hat{Y_i} - Y_i$ are expected to follow a normal distribution with a mean of zero, some standard deviation and an assumption that these terms are identically and independently distributed. These assumptions can be relaxed under certain circumstances (e.g. hetergenous variance, repeated measures), but when do hold, the residuals are uncorrleated with each other and share a common variance. This can be quickly assessed by plotting the residuals versus the fitted values. 
 
@@ -295,7 +299,7 @@ The qq-plot on the left is comparing observed residual "quantiles" (these are ac
 
 The "Dispersion test" is ....
 
-the "Outlier Test" is a bit tricky to interpret. DHARMa defines "outliers" as any observed value that is zero (all simulated data are larger) or 1 (all simulated data are smaller);^[This is one reason why transforming these with the quantile function can be a misleading since probabilities of 0 and 1 end up as negative infinity and infinity, respectively. Amusingly, the outlier test is a 2-sided test. "Are there enough outliers?" is not something people ask frequently.] thus, no information on magnitude is given. The outlier test runs a binomial test where the expected number of outliers is the inverse of the number of simulations plus 1 (1/(nSim + 1)). The DHARMa recommends that users view data labelled as "outliers" by DHARMa with caution as there is no way to determine to what extent they are truly outlying values. There is also a bootstrap procedure that empirically calculates the number of expected outliers versus how many were observed in the data. 
+the "Outlier Test" is a bit tricky to interpret. DHARMa defines "outliers" as any observed value that is zero (all simulated data are larger) or 1 (all simulated data are smaller);^[This is one reason why transforming these with the quantile function can be a misleading since probabilities of 0 and 1 end up as negative infinity and infinity, respectively. Amusingly, the outlier test is a 2-sided test. "Are there enough outliers?" is not something people ask frequently.] thus, no information on magnitude is given. The outlier test runs a binomial test where the expected number of outliers is the inverse of the number of simulations plus 1 (1/(nSim + 1)). The DHARMa manual recommends that users view data labelled as "outliers" by DHARMa with caution as there is no way to determine to what extent they are truly outlying values. There is also a bootstrap procedure that empirically calculates the number of expected outliers versus how many were observed in the data. 
 
 The plot on the right is contrasting the quantile residuals versus the 
 - quantile tests: fits splines (`qgam::qgam()`) at 0.25, 0.5 and 0.75 quantiles and looks for deviations from the expectation of a flat line, does a BH adjustment
