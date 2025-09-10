@@ -12,6 +12,11 @@ library(DHARMa); library(glmmTMB); library(performance); library(dplyr); library
 > 
 > *--Feng et al, [-@Feng2017]*
 
+### Introduction
+
+It is difficult to assess modelling assumptions in GLMMs using standard residual plots developed for general linear models. Residual plots from a GLMM can be non-sensical and overall lack diagnostic capabilities for GLMMs. Mathematical relationship between mean and variance in distribution and discrete outcomes make interpreting the visual patterns in common residual plots difficult, if not impossible. Randomized quantile residuals were developed as an alternative residual for generalized linear models. 
+
+### The Problem
 
 Assessing if a generalized linear mixed model (GLMM) is appropriately specified for a given data set and data generating process is challenging since often GLMMs have no defined distribution for model residuals. In a (general) linear mixed modelling context under the following conditions:
 
@@ -20,48 +25,68 @@ Where $\mathbf{Y}$ is a vector of the values for the dependent variable, $\mathb
 
 $$\epsilon_i \sim N(0, \sigma^2 \mathbf{I_n}) $$
 $$a \sim N(0, \sigma_a^2) $$
-The conditional distribution of the response variable, $y_i|a_i$
+The conditional distribution of the response variable, $y_i|a_i$, is a function of the marginal mean and scaled variance:
+
 $$ y_i|a_i \sim𝑁(x_i \beta, \sigma^2/r_i) $$
 
-The residuals, $\epsilon_i= \hat{Y_i} - Y_i$ are expected to follow a normal distribution with a mean of zero, some standard deviation and an assumption that these terms are identically and independently distributed. These assumptions can be relaxed under certain circumstances (e.g. hetergenous variance, repeated measures), but when do hold, the residuals are uncorrleated with each other and share a common variance. This can be quickly assessed by plotting the residuals versus the fitted values. 
-
-```{r}
-data(warpbreaks)
-m1 <- lm(log(breaks) ~ wool*tension, data = warpbreaks)
-check_model(m1, check = c("linearity", "qq"), detrend=FALSE, alpha=0)
-```
-
-Raw residuals from GLMMs can be nonsensical, and overall lack diagnostic capabilities for GLMMs. 
-
-```{r, echo=TRUE}
-data("VerbAgg")
-m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
-            family = binomial, data = VerbAgg, nAGQ=0L)
-plot(m2)
-```
-
-Detecting deviations from model expectations (e.g. dispersion, zero-inflation) is difficult given that some non-normal distributions have mathematically defined mean-variance relationships, and they may have discrete outcomes that are less amenable to direct interpretation via plotting. The visual patterns are difficult to interpret, over and under-dispersion are difficult to assess, and standard goodness of fit tests are not valid. 
-
-Scaled residuals such as Pearson or studentized residuals can alleviate these challenges to an extent, but they also can be difficult to correctly interpret for over- and underdispersion. 
+The model residuals, $\epsilon_i= \hat{Y_i} - Y_i$, are expected to follow a normal distribution with a mean of zero, some standard deviation and an assumption that these terms are identically and independently distributed. These assumptions can be relaxed under certain circumstances (e.g. hetergenous variance, repeated measures), but when do hold, the residuals are uncorrleated with each other and share a common variance. This can be quickly assessed by plotting the residuals versus the fitted values. 
 
 ::: {.callout-note collapse="true"}
-## Residuals 
+## Types of residuals
 
 **Raw:**
 $$\epsilon_i = Y_i - \hat{Y_i} $$
 
-**(internally) Studentized:**
-
-$$\epsilon_i = \frac {Y_i - \hat{Y_i}} {\hat{s}}$$
-
 **Pearson/Scaled:**
 
 $$ \epsilon_i = \frac {Y_i - \hat{Y_i}} {sd(Y_i)}  $$
+
+**Deviance**
+
+$$ \epsilon_i = sign(Y_i - \hat{Y_i})\sqrt{d_i}  $$
+and
+
+$$ d_i = \frac {Y_i - \hat{Y_i}} {\sigma} $$
+*(The Pearson residual for a normally-distributed variable)*
 :::
 
-## Randomized Quantile Residuals
 
-Randomized quantile residuals are an alternative, simulating data for each data point using the fitted GLMM for the distribution and its parameters and obtaining the quantile for each observation from the cumulative distribution function of the simulated data. Thus, quantile residuals are a measure of how well the data conform to the specified model and distribution. 
+The "iid" assumptions of residuals from a standard (non-generalized) linear mixed model can be assessed with a diagnostic plot.
+
+```{r}
+data("sleepstudy")
+m1 <- lmer(Reaction ~ Days + (Days|Subject), data = sleepstudy)
+```
+
+
+```{r}
+#| label: fig-ex1
+#| fig-cap: "A residual pattern indicating no deviations from model assumptions"
+#| column: margin
+plot(m1, form = resid(., type = "response") ~ fitted(.))
+```
+
+Plots of residuals of all types (e.g., Pearson, deviance) from GLMMs are less ammenable to direct interpretation. This is due to the lack of expectations regarding the distribution of error terms in most GLMMs^[The lognormal model, using the identity link function, is an exception.] and the mathematicalk relationships between parameters in many non-normal distributions (e.g. in Poisson, the mean and variance are the same). In such cases, detecting deviations from model expectations such as overdisperson, underdispersion or zero-inflation is difficult, and standard goodness of fit tests are not valid. 
+
+Scaled residuals such as Pearson or studentized residuals can alleviate these challenges for some distributions, but they also can be difficult to correctly interpret for over- and underdispersion. 
+
+```{r}
+data("VerbAgg")
+m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
+            family = binomial, data = VerbAgg, nAGQ=0L)
+```
+
+```{r}
+#| label: fig-ex2b
+#| fig-cap: "Residual plots for a binomial-distributed variable"
+#| column: margin
+
+plot(m2, form = resid(., type = "deviance") ~ fitted(.))
+```
+
+### Randomized Quantile Residuals
+
+Randomized quantile residuals are an alternative type of residuals specifically developed for generalized linear models. They are calculated by simulating data for each data point using the fitted GLMM for the distribution and its parameters and obtaining the quantile for each observation from the cumulative distribution function of the simulated data. Thus, quantile residuals are a measure of how well the data conform to the specified model and distribution. 
 
 Quantile residuals were first defined by Dunn and Smyth [-@dunn1996]: and later implemented in their package "statmod" [-@statmod]. 
 
