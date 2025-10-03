@@ -355,6 +355,7 @@ Assessing if a generalized linear mixed model (GLMM) is appropriately specified 
 - **Simulations for other factors** 
 Residuals can be simulated for individuals predictors and tests can be conducted for individual factors
 -  **Autocorrelation** for any kind of autocorrelation, conditional simulations are a must so that plots don't indicate patterns or the tests fail due to autocorrelation
+-  **Ordinal models** randomized quantile residuals do not work with ordinal or multinomial models. 
 
 
 ----------------------------------------------------------------
