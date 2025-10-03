@@ -75,7 +75,7 @@ These take different scaling approaches in order to decouple the relationship be
 #| label: fig-ex2b
 #| fig-cap: "Residual plots for a binomial-distributed variable"
 #| echo: false
-
+library(lme4)
 data("VerbAgg")
 m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
             family = binomial, data = VerbAgg, nAGQ=0L)
@@ -89,40 +89,54 @@ plot(m2, form = resid(., type = "deviance") ~ fitted(.))
 
 Randomized quantile residuals are an alternative type of residuals specifically developed for generalized linear models. They were first defined by Dunn and Smyth [-@dunn1996]: and later implemented in their package "statmod" [-@statmod]. They are calculated by simulating data for each data point using the fitted GLMM for the distribution and its parameters and obtaining the quantile for each observation from the cumulative distribution function of the simulated data. Thus, quantile residuals are a measure of how well the data conform to the specified model and distribution. 
 
-Quantile residuals 
+Quantile residuals are calculated following this procedure:
 
-For $y_1,...,y_n$ responses:  
-
+For $y_1,...,y_n$ responses, they follow a probability distribution with parameters $\mu$ and $\phi$. 
 $$y_i \sim \mathcal{P}(\mu_i, \phi)$$
 
-CDF: $$F(y; \mu, \phi)$$ 
+Under the cumulative distribution function for that probabality distribution, $F(y; \mu, \phi)$, the residuals, $u_i$ are calculated by sampling within an observation-specific uniform distribution and then calculating the z-score from that. 
 
-For a continuous $F$, $F(y_i; \mu_i \phi)$ are uniformly distributed, and the quantile residuals are:
+Residuals: $r_{i,q} = \Phi^{-1}(u_i)$
 
-$$ r_{i} = \Phi^{-1} \left\{F(y_i; \hat{\mu_i}, \hat{\phi} )\right\}$$
+Residual quantiles: $ u_i \sim Uniform(a_i, b_i]$
 
-The quantile residuals, $r_i$ converge to a normal distribution when parameters are consistently estimated. The Probit distribution,  $\Phi(x)$ returns a probability p, and $\Phi^{-1}(p)$ returns the z-score. 
+Where: 
+
+$$a_i = lim_{y \rightarrow y_i} F(y; \hat{\mu_i}, \hat{\phi})$$
+
+$$ b_i = F(y_i; \hat{\mu_i}, \hat{\phi}) $$
+
+On a practical level, $a_i$ and $b_i$ can be described as thus: 
+
+For a discontinous $F$: 
+
+- $a_i = Pr(Y < y_i)$
+- $b_i = Pr(Y <= y_i)$
+- (a, b]
+
+For a continuous $F$:
+
+- $a=b$  
+- $F(y_i; \mu_i, \phi)$ are uniformly distributed if the model is correct; and   
+
+The quantile residuals, $r_i$ converge to a normal distribution when parameters are consistently estimated, and under larage samples, are iid. The Probit distribution,  $\Phi(x)$ returns a probability p, and $\Phi^{-1}(p)$ returns the z-score. The process, first described by Dunn and Smyth [-@dunn1996], was later expanded upon by Warton et all [-@warton2017] and named "probablity integral transform" residuals (abbreviated "PIT" by the authors). While Dunn and Smyth's version uses a half open interval for (a, b], Warton et al's method is closed [a, b]. 
 
 > Randomization is used to produce continuously distributed residuals when the response is discrete or has a discrete component. This means that the quantile residuals will vary from one realization to another for a given data set and fitted model.
 > *--Dunn & Smythe (-@Dunn1996)*
 
-Dunn and Smythe originally recommend running *at least* 4 quantile samples per observation. Nowadays, we would run hundreds of simulations per observation. 
+Dunn and Smythe originally recommend running *at least* 4 quantile samples per observation. Nowadays, the current recommendation (and default behavior of most software) is to run hundreds of simulations per observation. 
 
-Quantile residuals are expected to follow a uniform distribution with a half-open interval (0,1], and they can be interpreted similarly to common diagnostic residuals plots such as the q-q plot and the residual-versus-fitted values plot. Thus, randomized quantile residuals permit users to evaluate how well the data conform to model distributional assumptions and model parameter expectations. 
+Quantile residuals can be interpreted similarly to common diagnostic residuals plots such as the q-q plot and the residual-versus-fitted values plot. Thus, randomized quantile residuals permit users to evaluate how well the data conform to model distributional assumptions and model parameter expectations. 
 
-This method is implemented in the R packages "statmod" for `glm` objects [@statmod], and an adapted version is implemented by "DHARMa" for many linear modelling object types [@dharma]. 
-
+This method is implemented in the R packages "statmod" for `glm` objects [@statmod] and  by "DHARMa" for many linear modelling object types [@dharma]. Since DHARMa has broad compatibility with many GLMM modelling packages and is widely used by reseachers, funcationality from that package will be the focus for the rest of this chapter. 
 
 ### DHARMa (Diagnostics for HierArchical Regression Models)
 
-DHARMa is a widely-used package for GLMM model diagnostics. It implements quantile residuals as described by Dunn and Smythe with a few alterations: 
+DHARMa is a widely-used package for GLMM model diagnostics. It implements quantile residuals as described by Dunn and Smythe with a few alterations already aluded to: 
 
-- the residuals are kept on the uniform distribution bounded by zero and 1; they are not back-tranformed to normally-distributed Z-scores. Unlike the Dunn and Smyth quantile residuals, both ends of the distribution are closed: [0,1]. 
+- the residuals are kept on the uniform distribution bounded by zero and 1 by default; they are not back-tranformed to normally-distributed Z-scores automatically, although there is functionality within the package to that. 
+- Unlike the Dunn and Smyth quantile residuals, both ends of the distribution are closed: [0,1]. 
 - in the default settings, 250 simulations are run for each observation in the data set
-- for discrete outcomes, there is a random deviate added to introduce additional stochasticity .... 
-
-
-
 
 ### The DHARMa Process
 
@@ -204,7 +218,7 @@ text(4, 0.8, expression(paste(r[i])))
 rm(yi, x, dat, res, mu)
 ```
 
-For a single observation, there a range of quantiles result from the simulations:  
+For a single observation, a range of quantiles residuals will result from the simulations. Below is an example of different residuals that results for the conditions of $F(y_i; \hat{\mu}) \sim Poisson(\mu)$ where $\hat{\mu} = 5$ and $y_i = 7$. 
 
 ```{r, echo=FALSE}
 # generate multiple simulations to see
@@ -226,9 +240,11 @@ par(mfrow = c(1, 1))
 
 hist(sims, main = expression(paste("Poisson Example: ", hat(Y[i]), " = ", lambda, " = 5, ", 
                                    Y[i], " = 7")),
-     xlab = "Sample Quantiles (500 simulations of 500 obs each)", col = "#AFE4DE")
+     xlab = "Quantile Residuals (500 simulations of 500 obs each)", col = "#AFE4DE")
 abline(v = mean(sims), lwd = 2, lty = 2, col = "red2")
 ```
+
+
 
 ### DHARMa example for a GLMM with a Poisson-distributed variable 
 
@@ -294,6 +310,8 @@ And also see DHARMa quantile residual output for the incorrectly specified model
 wr <- simulateResiduals(wrongModel, plot = TRUE)
 ```
 
+There is a considerable amount of information here, so let's go through it one element at a time. 
+
 ### DHARMa Output
 
 These plots are the results of the previously described randomized quantile residual simulations. By default, 250 simulations are conducted per observation, and simulations are conducted at the last stochastic level (i.e. across all random effects that enter the Poisson process. The simulations are saved to an object so they can re-used if necessary for model diagnostic tests and plots such as for over- or underdispersion, uniformity, zero inflation, and categorical dependence among the independent variables.
@@ -313,8 +331,6 @@ The plot on the right is contrasting the quantile residuals versus the
 The default choice of DHARMa is to simulate all stochastic levels, so the resulting residuals can serve an omnibus 
 
 Given the tricky situation where low level random effects enter the model as Gaussian variables that are subsumed into the GLMM process, there may be interest in simulating lower level processes. The extent to which these simulations can be conducted depends on the R package being used. Conditional models where the predictions are conditioned on the random effects only are fully supported for **lme4** and partially supported for **glmmTMB** (see [GitHub issue](https://github.com/glmmTMB/glmmTMB/issues/888) for technical details).
-
-
 
 > If the model is correctly specified, the simulated residuals should be flat regardless how many hierarchical levels we re-simulate. The most thorough procedure would therefore be to test all possible options. If testing only one option, I would recommend to re-simulate all levels, because this essentially tests the model structure as a whole. This is the default setting in the DHARMa package. A potential drawback is that re-simulating the lower-level random effects creates more variability, which may reduce power for detecting problems in the upper-level stochastic processes. In particular dispersion tests may produce different results when switching from conditional to unconditional simulations, and often the conditional simulation is more sensitive.
 > *--F. Hargtig, DHARMA Manual* [-@dharma]
@@ -364,6 +380,8 @@ Residuals can be simulated for individuals predictors and tests can be conducted
 
 *If you think it's worth keeping, let me know.*
 
+
+** This stuff is from the Dunn & Smythe paper:**
 
 ::: {.callout-note collapse="true"}
 ## Example: survival times of patients 
