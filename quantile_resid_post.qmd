@@ -312,35 +312,47 @@ wr <- simulateResiduals(wrongModel, plot = TRUE)
 
 There is a considerable amount of information here, so let's go through it one element at a time. 
 
-### DHARMa Output
+### Default DHARMa Output
 
 These plots are the results of the previously described randomized quantile residual simulations. By default, 250 simulations are conducted per observation, and simulations are conducted at the last stochastic level (i.e. across all random effects that enter the Poisson process. The simulations are saved to an object so they can re-used if necessary for model diagnostic tests and plots such as for over- or underdispersion, uniformity, zero inflation, and categorical dependence among the independent variables.
 
-The **qq-plot** on the left is comparing observed residual "quantiles" (these are actually probabilies) with expected quantiles that were generated assuming a uniform distribution (0, 1) simulated with `stats::punif()`. The "KS Test" is a Kolmogorov-Smirnov test, using the function `stats::ks.test()`.   
+The **qq-plot** on the left is comparing observed residual "quantiles" (these are actually probabilies) with expected quantiles that were generated assuming a uniform distribution (0, 1) simulated with `stats::punif()`.   This plot can be individually called with `plotQQunif()`. It is automatically testing for uniformity, outliers and dispersion. Uniformity is evaluted with the KS (Kolmogorov-Smirnov) test, using the function `stats::ks.test()`.
 
-The "Dispersion test" is ....
+The default "Dispersion test" present the results of a DHARMa bootstrap approach, comparing the variance of the observed raw residuals versus the variance of the simulated residuals (i.e. simulated - predicted values), where both are scaled to the mean simulated variance. Values close indicate conformation to expectations; values greater than one provide evidence of overdispersion and values less than one indicate underdispersion. This is the process for a fully conditional model. An unconditional model uses the squared Pearson residuals to calculate and compare approximate deviances. This can be computationally intensive and requires that the modelling package furnish Pearson residuals. In both cases, the p-value is the empirical proportion a simulated values is greater, less than or both compared to the observed value. Another approach is enabled using Pearson residuals described by Ben Bolker as a "crude" and  "approximate" estimation in [GLMM FAQ's](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#overdispersion). This uses the squared sum of the Pearson residuals and error degrees of freedom in the Chi-square density function to estimate the proability of over- or under-dispersion.  All dispersion tests implemented in DHARMa are by default two-sided, evaluating both overdispersion and underdispersion. This can be adjusted in the function arguments if only one approach is needed. 
 
-the **Outlier Test** is a bit tricky to interpret. DHARMa defines "outliers" as any observed value that is zero (all simulated data are larger) or 1 (all simulated data are smaller);^[This is one reason why transforming these with the quantile function can be a misleading since probabilities of 0 and 1 end up as negative infinity and infinity, respectively. Amusingly, the outlier test is a 2-sided test. "Are there enough outliers?" is not something researchers ask frequently.] thus, no information on magnitude is given. The outlier test runs a binomial test where the expected number of outliers is the inverse of the number of simulations plus 1 (1/(nSim + 1)). The DHARMa manual recommends that users view data labelled as "outliers" by DHARMa with caution as there is no way to determine to what extent they are truly outlying values. There is also a bootstrap procedure that empirically calculates the number of expected outliers versus how many were observed in the data. 
+the **Outlier Test** is a bit tricky to interpret. DHARMa defines "outliers" as any observed value that is zero (all simulated data are larger) or 1 (all simulated data are smaller);^[This is one reason why transforming these with the quantile function can be a misleading since probabilities of 0 and 1 end up as negative infinity and infinity, respectively. Amusingly, the outlier test is a 2-sided test. "Are there enough outliers?" is not something researchers ask frequently.] thus, no information on magnitude is given. The outlier test runs a binomial test where the expected number of outliers is the inverse of the number of simulations plus 1 ($1/(nSim + 1)$). The DHARMa manual recommends that users view data labelled as "outliers" by DHARMa with caution as there is no way to determine to what extent they are truly outlying values. There is also a bootstrap procedure that empirically calculates the number of expected outliers versus how many were observed in the data. 
 
-The plot on the right is contrasting the quantile residuals versus the 
-- quantile tests: fits splines (`qgam::qgam()`) at 0.25, 0.5 and 0.75 quantiles and looks for deviations from the expectation of a flat line, does a BH adjustment
+The plot on the right is contrasting the quantile residuals versus the rank-transformed model predictions. DHARMa conducts quantile tests at the 0.25, 0.5 and 0.75 quantiles by fitting splines (using the function `qgam::qgam()`) and testing for deviations from the expectation of a flat line. It does a Benjamini-Hochberg adjustment for multiple testing. This plot can be called with the function `DHARMa::plotResiduals()`, that has additional arguments for using absolute deviations (for testing heteroscedasticity), testing versus other specific factors in the model, and other arguments.  [[add content on plot interpretation]]
 
+### Additional DHARMa Functionality to Consider
+
+**1. Testing for specific factor**
+Residuals can be simulated for individuals predictors to evaluate the impact of specific factor levels on dispersion using the `form = ` argument in `plotResiduals()` or the function `testCategorical()`). In such cases, boxplots are produced, betweeen group variance is compared with a Levene's test, and within-group variance is evaluted with individual KS tests (simulating a uniform distribution for each factor level). 
+
+**1. Test for zero-inflation**
+
+A handy test evaluating how the number of zero's occurring measure up to the number of zero's expected for a given distribution and set of parameters. Like the other tets, the number of zero's under the simulations are compared to the observed zeros and an empirical probability of having more or less zero's than expected is reported. 
+
+**1. Tests for spatial and temporal autocorrelation**
+
+Note that for any kind of autocorrelation, conditional simulations are recommendfed otherwise the plots or tests may indicate problems when there are not any. 
+[[need to finish content]] 
+
+**1. Simulate Likelihood Ratio Ttest**
+
+[[need content]]
+
+*Please note that this is not a comprehensive list of all functionality enabled in DHARMa.*
 
 ### Conditional and Marginal Models
 
-The default choice of DHARMa is to simulate all stochastic levels, so the resulting residuals can serve an omnibus 
+The default choice of DHARMa is to simulate all stochastic levels, so the resulting residuals can serve an omnibus test. The documentation for the package indicates that if the model is correctly specified, the simulated quantile residuals are diagnostic regardless of how many hierarchal levels simulated.
 
-Given the tricky situation where low level random effects enter the model as Gaussian variables that are subsumed into the GLMM process, there may be interest in simulating lower level processes. The extent to which these simulations can be conducted depends on the R package being used. Conditional models where the predictions are conditioned on the random effects only are fully supported for **lme4** and partially supported for **glmmTMB** (see [GitHub issue](https://github.com/glmmTMB/glmmTMB/issues/888) for technical details).
+Given the tricky situation where low level random effects enter the model as Gaussian variables that are subsumed into the GLMM process, there may be interest in simulating lower level processes. The extent to which these simulations can be conducted depends on the R package being used. Conditional models where the predictions are conditioned on the random effects only are fully supported for **lme4** and partially supported for **glmmTMB** (see [GitHub issue](https://github.com/glmmTMB/glmmTMB/issues/888) for technical details). The DHARMa documentation warns that unconditional simulations can result in greater variability of the residuals and lower power to detect deviations from model expectations in higher-level processes. In particular, dispersion tests can be less sensitive using unconditional rather than conditional simulations. 
 
-> If the model is correctly specified, the simulated residuals should be flat regardless how many hierarchical levels we re-simulate. The most thorough procedure would therefore be to test all possible options. If testing only one option, I would recommend to re-simulate all levels, because this essentially tests the model structure as a whole. This is the default setting in the DHARMa package. A potential drawback is that re-simulating the lower-level random effects creates more variability, which may reduce power for detecting problems in the upper-level stochastic processes. In particular dispersion tests may produce different results when switching from conditional to unconditional simulations, and often the conditional simulation is more sensitive.
-> *--F. Hargtig, DHARMA Manual* [-@dharma]
+Below are examples of conditional and unconditional residual simulations. 
 
-
-
-
-> A potential drawback is that re-simulating the lower-level random effects creates more variability, which may reduce power for detecting problems in the upper-level stochastic processes. In particular dispersion tests may produce different results when switching from conditional to unconditional simulations, and often the conditional simulation is more sensitive.
-> *--F. Hartig, DHARMA Manual [@dharma]*
-
+[[finish content]]
 
 ```{r, echo=TRUE,eval=FALSE}
 m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
@@ -351,34 +363,37 @@ m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item),
 r2 <- simulateResiduals(m2, plot=TRUE, n = 50)
 ```
 
+## Limitations to Randomize Quantile Residuals
 
-### Other DHARMa Functionality 
-
-* Tests for spatial and temporal autocorrelation 
-* Test for zero-inflation
-* Over/Under dispersion tests
+There is a relative paucity of peer-reviewed literature. [[finish content]]
 
 
 ## Conclusion and Best Practices
 
 Assessing if a generalized linear mixed model (GLMM) is appropriately specified for a given data set and data generating process is challenging since often GLMMs have no defined distribution for model residuals. Randomized quantile residuals are a useful model diagnostic tool for those situations. This is implemented in the R package DHARMa and be manually written for SAS. 
 
-- **Read the manual.** The documentation for DHARMa is extensive and detailed; reading this will enhance user's understanding of how to best use DHARMa and interpret its output. 
-- **Interpret DHARMa results as suggetions, not rules.** Although the hypothesis tests conducted by DHARMa provide an easy decision making tool, recall that no hypothesis provides an unambiguous answer. Outlier test results in particular should be treated with caution and not strictly diagnostic for individual observations.  
-- **Be aware of limitations.** It should be noted that at this time, there is a lack of information on their performance and reliability across a broad range of conditions. The sensitivity of these residuals to modest model mis-specifications is unknown. 
-- **Functionality** in DHARMa depends on the simulation functions build into GLMM package that is being supported and what options are available through that package. Supported packages and function include: `lm()`, `glm()`, **lme4**, **glmmTMB**, **GLMMadaptive**, **mgcv**, **spaMM**, **mgcv**, **gamm4**, **brms**, among other packages. 
-- **Conditional simulations** Commonly, only the last stochastic level (e.g. Poisson) is simulated, conditional on the fitted random effects, basically an omnibus test. 
-- **Simulations for other factors** 
-Residuals can be simulated for individuals predictors and tests can be conducted for individual factors
--  **Autocorrelation** for any kind of autocorrelation, conditional simulations are a must so that plots don't indicate patterns or the tests fail due to autocorrelation
--  **Ordinal models** randomized quantile residuals do not work with ordinal or multinomial models. 
+- **Randomized quantile residuals are a great tool.** These are helpful for diagnosing model misspecification and do work much better than conventional residuals for identifying problems. 
 
+- **Interpret DHARMa results as suggetions, not rules.** Although the hypothesis tests conducted by DHARMa provide an easy decision making tool, recall that no hypothesis provides an unambiguous answer. Outlier test results in particular should be treated with caution and not strictly diagnostic for individual observations.
+
+- **Functionality** in DHARMa depends on the simulation functions build into GLMM package that is being supported and what options are available through that package. Supported packages and function include: `lm()`, `glm()`, **lme4**, **glmmTMB**, **GLMMadaptive**, **mgcv**, **spaMM**, **mgcv**, **gamm4**, **brms**, among other packages. 
+
+- **Pay attention to other tests.** When appropriate, make sure to evaluate candidate models for heteroscedasticty due to individual factors in the model, proper specification of a zero-inflation terms and autocorrelation (spatial or temporal). These are model specific and are not produced by the default DHARMa output, so the user must be aware and motivated. 
+
+- **Conditional simulations** Commonly only the last stochastic level (e.g. Poisson) is simulated, conditional on the fitted random effects, serving as an omnibus test for model residuals. Unconditional simulations are dependent on the GLMM package itself and are implemented to varying extents in each package. These may be useful in certain scenarios, but overall lack diagnostic power. 
+
+- **Be aware of limitations.** It should be noted that at this time, there is a lack of information on their performance and reliability across a broad range of conditions. The sensitivity of these residuals to modest model mis-specifications is unknown. 
+
+-  **Categorical models** randomized quantile residuals do not work with ordinal or multinomial models. 
+
+- **Read the manual.** The documentation for DHARMa is extensive and detailed; reading this will enhance user's understanding of how to best use DHARMa and interpret its output. 
+ 
 
 ----------------------------------------------------------------
 
 ## Cut Material
 
-*If you think it's worth keeping, let me know.*
+*If you think anything below is worth keeping, let me know.*
 
 
 ** This stuff is from the Dunn & Smythe paper:**
@@ -426,3 +441,5 @@ $$b_i = F(y_i; n, \hat{p_i}) =\displaystyle\sum_{i=0}^{\lfloor k \rfloor} \begin
   i
 \end{pmatrix} p_i(1-p)^{n-i}$$
 :::
+
+
