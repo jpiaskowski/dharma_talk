@@ -46,7 +46,7 @@ m1 <- lmer(Reaction ~ Days + (Days|Subject), data = sleepstudy)
 plot(m1, form = resid(., type = "response") ~ fitted(.))
 ```
 
-It is difficult to examine modelling assumptions in GLMMs using the same standard residual plots developed for general linear models. Model residuals in GLMMs are not expected to be normally distributed (the log-normal model being an exception) and may have no distributional assumptions at all. Furthermore, canonical relationship between mean and variance for some distributions as well as distributions for discrete outcomes can result in non-sensical plots that lack diagnostic capabilities for GLMMs. 
+It is difficult to examine modelling assumptions in GLMMs using the same standard residual plots developed for general linear models. Model residuals in GLMMs are not expected to be normally distributed (the log-normal model being an exception) and may have no distributional assumptions at all. Furthermore, canonical relationship between mean and variance for some distributions as well as distributions for discrete outcomes can result in non-sensical plots that lack diagnostic capabilities for GLMMs. Furthermore, goodness of fit tests are not valid for non-Gaussian linear models [@feng]. 
 
 Alternatives to the standard residuals have been developed included Pearson, studentized and deviation residuals. 
 
@@ -374,12 +374,9 @@ r2b <- simulateResiduals(m2, plot=TRUE)
 
 ## Limitations to Randomized Quantile Residuals
 
-There is a relative paucity of peer-reviewed literature. As described, Dunn and Smyth [-@dunn] established the basic framework for calculating randomized quantile residuals, which Warton et al [-@warton] expanded on and developed a stronger theoretical foundation for it. 
+There is a relative paucity of peer-reviewed literature. As described, Dunn and Smyth [-@dunn] established the basic framework for calculating randomized quantile residuals in a short communication, which Warton et al and [-@warton] expanded on and determined that this approach works for sparse (zero enriched), overdispersed and high dimension data (i.e. many independent variables). Warton established that this residual approach only required information on the marginal distribution of data and did not require understanding the joint distributions of data from marginal models nor did it need information on correlation structures in clustered data. Feng et al [-@feng] further developed a stronger theoretical foundation for randomized quantile residuals and evaluated the ability of these to detect deviations from non-linearity, overdispersion, and zero-inflation. The residual patterns were such that deviations from linearity for discrete and continous outcome variables, overdiserspion and model misspecification with regard to zero inflation was detectable. However, there has been no published work exploring the performance of randomized quantile residuals in a mixed model context (general or generalized). 
 
-
-
-
-
+Randomized quantile residuals do not work with any categorical outcome. However, Gerber and Craig [-@gerber] have developed diagnostic residuals for categorical outcomes variables and implemented this approach in the R package '[MMLN](https://github.com/eaegerber/MMLN)'. 
 
 ## Conclusion and Best Practices
 
@@ -402,15 +399,13 @@ Assessing if a generalized linear mixed model (GLMM) is appropriately specified 
 - **Read the manual.** The documentation for DHARMa is extensive and detailed; reading this will enhance user's understanding of how to best use DHARMa and interpret its output. 
  
 ## References
-*(current manually inserted)*
+*(current manually inserted since this document is meant to be rendered as part of a website)*
 
 Dunn KP, and GK Smyth (1996). Randomized quantile residuals. Journal of Computational and Graphical Statistics 5, 1-10.
 
 Feng et al (2017). Randomized quantile residuals: an omnibus model diagnostic tool with unified reference distribution. arXiv https://doi.org/10.48550/arXiv.1708.08527
 
 Gerber EAE and BA Craig (2024) Residuals and diagnostics for multinomial regression models. Statistical Analysis and Data Mining: An ASA Data Science Journal 17:e11645. https://doi.org/10.1002/sam.11645
-
-Liu D, Zhang H (2018) Residuals and Diagnostics for Ordinal Regression Models: A Surrogate Approach. J Am Stat Assoc 113:845–854. https://doi.org/10.1080/01621459.2017.1292915
 
 Warton DI, Thibaut L, Wang YA (2017) The PIT-trap—A “model-free” bootstrap procedure for inference about regression models with discrete, multivariate responses. PLOS ONE 12:1–18. https://doi.org/10.1371/journal.pone.0181790
 
