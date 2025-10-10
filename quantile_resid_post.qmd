@@ -331,7 +331,7 @@ Residuals can be simulated for individuals predictors to evaluate the impact of 
 
 **1. Test for zero-inflation**
 
-A handy test evaluating how the number of zero's occurring measure up to the number of zero's expected for a given distribution and set of parameters. Like the other tets, the number of zero's under the simulations are compared to the observed zeros and an empirical probability of having more or less zero's than expected is reported. 
+A handy test evaluating how the number of zero's occurring measure up to the number of zero's expected for a given distribution and set of parameters. Like the other tets, the number of zero's under the simulations are compared to the observed zeros and an empirical probability of having more or less zero's than expected is reported.^[Is there another section in this guide b]
 
 **1. Tests for spatial and temporal autocorrelation**
 
@@ -350,22 +350,35 @@ The default choice of DHARMa is to simulate all stochastic levels, so the result
 
 Given the tricky situation where low level random effects enter the model as Gaussian variables that are subsumed into the GLMM process, there may be interest in simulating lower level processes. The extent to which these simulations can be conducted depends on the R package being used. Conditional models where the predictions are conditioned on the random effects only are fully supported for **lme4** and partially supported for **glmmTMB** (see [GitHub issue](https://github.com/glmmTMB/glmmTMB/issues/888) for technical details). The DHARMa documentation warns that unconditional simulations can result in greater variability of the residuals and lower power to detect deviations from model expectations in higher-level processes. In particular, dispersion tests can be less sensitive using unconditional rather than conditional simulations. 
 
-Below are examples of conditional and unconditional residual simulations. 
+Below are examples of conditional and unconditional residual simulations. This example, used earlier, is from the ***lme4*** package. 
 
 [[finish content]]
+
 
 ```{r, echo=TRUE,eval=FALSE}
 m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
             family = binomial, data = VerbAgg, nAGQ=0L)
 ```
 
+A conditional simulation: 
 ```{r}
-r2 <- simulateResiduals(m2, plot=TRUE, n = 50)
+r2a <- simulateResiduals(m2, plot=TRUE)
 ```
 
-## Limitations to Randomize Quantile Residuals
+Unconditional Simulations
 
-There is a relative paucity of peer-reviewed literature. [[finish content]]
+```{r}
+r2b <- simulateResiduals(m2, plot=TRUE)
+```
+
+
+## Limitations to Randomized Quantile Residuals
+
+There is a relative paucity of peer-reviewed literature. As described, Dunn and Smyth [-@dunn] established the basic framework for calculating randomized quantile residuals, which Warton et al [-@warton] expanded on and developed a stronger theoretical foundation for it. 
+
+
+
+
 
 
 ## Conclusion and Best Practices
@@ -388,6 +401,18 @@ Assessing if a generalized linear mixed model (GLMM) is appropriately specified 
 
 - **Read the manual.** The documentation for DHARMa is extensive and detailed; reading this will enhance user's understanding of how to best use DHARMa and interpret its output. 
  
+## References
+*(current manually inserted)*
+
+Dunn KP, and GK Smyth (1996). Randomized quantile residuals. Journal of Computational and Graphical Statistics 5, 1-10.
+
+Feng et al (2017). Randomized quantile residuals: an omnibus model diagnostic tool with unified reference distribution. arXiv https://doi.org/10.48550/arXiv.1708.08527
+
+Gerber EAE and BA Craig (2024) Residuals and diagnostics for multinomial regression models. Statistical Analysis and Data Mining: An ASA Data Science Journal 17:e11645. https://doi.org/10.1002/sam.11645
+
+Liu D, Zhang H (2018) Residuals and Diagnostics for Ordinal Regression Models: A Surrogate Approach. J Am Stat Assoc 113:845–854. https://doi.org/10.1080/01621459.2017.1292915
+
+Warton DI, Thibaut L, Wang YA (2017) The PIT-trap—A “model-free” bootstrap procedure for inference about regression models with discrete, multivariate responses. PLOS ONE 12:1–18. https://doi.org/10.1371/journal.pone.0181790
 
 ----------------------------------------------------------------
 
