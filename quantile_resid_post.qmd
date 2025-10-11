@@ -136,7 +136,7 @@ DHARMa is a widely-used package for GLMM model diagnostics. It implements quanti
 
 - the residuals are kept on the uniform distribution bounded by zero and 1 by default; they are not back-tranformed to normally-distributed Z-scores automatically, although there is functionality within the package to that. 
 - Unlike the Dunn and Smyth quantile residuals, both ends of the distribution are closed: [0,1]. 
-- in the default settings, 250 simulations are run for each observation in the data set
+- in the default settings, 250 simulations are run for each observation in the data set.
 
 ### The DHARMa Process
 
@@ -269,7 +269,7 @@ par(mfrow = c(1, 1))
 hist(testData$observedResponse, col = "#AFE4DE", main = NULL, xlab = "raw data")
 ```
 
-Next, the data set is analyzed correctly using a GLMM and incorrectly using a LMM: 
+Next, the data set is analyzed correctly using a GLMM model: 
 
 ```{r}
 #| echo: TRUE
@@ -287,10 +287,9 @@ Here are the standard residual plots for both deviance and Pearson residuals. Wi
 ```{r}
 #| echo: TRUE
 #| fig-cap: "Standard residual plots for Poisson-distributed variable"
-par(mfrow = c(1, 2))
+#par(mfrow = c(1, 2))
 
 plot(fitted(rightModel), residuals(rightModel, type = "deviance"), main = "correct family", xlab = "fitted", ylab = "deviance residuals", col = "#5E48FF")
-plot(fitted(wrongModel), residuals(wrongModel, type = "pearson"), main = "incorrect family", xlab = "fitted", ylab = "Pearson residuals", col = "#5E48FF")
 ```
 
 Now, let's Look at the DHARMa quantile residual output for the correctly specified model:
@@ -299,15 +298,6 @@ Now, let's Look at the DHARMa quantile residual output for the correctly specifi
 #| echo: TRUE
 #| fig-cap: "Randomized quantile residuals for a correctly specified model"
 sr <- simulateResiduals(rightModel, plot = TRUE)
-```
-
-And also see DHARMa quantile residual output for the incorrectly specified model:
-
-
-```{r}
-#| echo: TRUE
-#| #| fig-cap: "Randomized quantile residuals for an incorrectly specified model"
-wr <- simulateResiduals(wrongModel, plot = TRUE)
 ```
 
 There is a considerable amount of information here, so let's go through it one element at a time. 
@@ -322,11 +312,37 @@ The default "Dispersion test" present the results of a DHARMa bootstrap approach
 
 the **Outlier Test** is a bit tricky to interpret. DHARMa defines "outliers" as any observed value that is zero (all simulated data are larger) or 1 (all simulated data are smaller);^[This is one reason why transforming these with the quantile function can be a misleading since probabilities of 0 and 1 end up as negative infinity and infinity, respectively. Amusingly, the outlier test is a 2-sided test. "Are there enough outliers?" is not something researchers ask frequently.] thus, no information on magnitude is given. The outlier test runs a binomial test where the expected number of outliers is the inverse of the number of simulations plus 1 ($1/(nSim + 1)$). The DHARMa manual recommends that users view data labelled as "outliers" by DHARMa with caution as there is no way to determine to what extent they are truly outlying values. There is also a bootstrap procedure that empirically calculates the number of expected outliers versus how many were observed in the data. 
 
-The plot on the right is contrasting the quantile residuals versus the rank-transformed model predictions. DHARMa conducts quantile tests at the 0.25, 0.5 and 0.75 quantiles by fitting splines (using the function `qgam::qgam()`) and testing for deviations from the expectation of a flat line. It does a Benjamini-Hochberg adjustment for multiple testing. This plot can be called with the function `DHARMa::plotResiduals()`, that has additional arguments for using absolute deviations (for testing heteroscedasticity), testing versus other specific factors in the model, and other arguments.  [[add content on plot interpretation]]
+The plot on the right is contrasting the quantile residuals versus the rank-transformed model predictions (where the rank transformation is rank of each prediction divided by the maximum rank, using the ties method of “average”). DHARMa conducts quantile tests at the 0.25, 0.5 and 0.75 quantiles by fitting splines (using the function `qgam::qgam()`) and testing for deviations from the expectation of a flat line. It does a Benjamini-Hochberg adjustment for multiple testing. This plot can be called with the function `DHARMa::plotResiduals()`, that has additional arguments for using absolute deviations (for testing heteroscedasticity), testing versus other specific factors in the model, and other arguments. When heteroscedasticity is present, the quantile lines are often not parallel. If the 0.25 quantile line trends towards zero and the 0.75 quantile line trends towards one, that is evidence of overdispersion. 
+
+It may also help to see DHARMa output for the incorrectly specified model.
+
+Recall the correct model form is using a Poisson procesds:
+
+```{r}
+#| eval: false
+#| echo: true
+rightModel <- glmer(observedResponse ~ Environment1 + (1|group) , 
+                     family = "poisson", data = testData)
+```
+
+When this relationship is evaluated using a LMM instead of a GLMM, the plots do indicate problems in the model fit: 
+
+```{r}
+#| echo: TRUE
+#| #| fig-cap: "Randomized quantile residuals for an incorrectly specified model"
+
+wrongModel <- lmer(observedResponse ~ Environment1 + (1|group) , 
+                     data = testData) 
+
+wr <- simulateResiduals(wrongModel, plot = TRUE)
+```
+
+The deviating quantile lines most certainly indicate the wrong model specification and a possible mean-residual relationship not fully accounted for in the statistical model. The residuals did not fail the disperson test (two-sided, evaluating both under- and overdispersion), but, they did fail the Kolmogorov-Smirnov for uniformity of the residuals. Not every DHARMa residual panel can precisely diagnose the problems, especially for extreme examples like this when the entire distribution is wrong, but they can initiate a process of evaluating model misspecification. 
+
 
 ### Additional DHARMa Functionality to Consider
 
-**1. Testing for specific factor**
+**1. Testing for specific factors**
 Residuals can be simulated for individuals predictors to evaluate the impact of specific factor levels on dispersion using the `form = ` argument in `plotResiduals()` or the function `testCategorical()`). In such cases, boxplots are produced, betweeen group variance is compared with a Levene's test, and within-group variance is evaluted with individual KS tests (simulating a uniform distribution for each factor level). 
 
 **1. Test for zero-inflation**
@@ -350,25 +366,85 @@ The default choice of DHARMa is to simulate all stochastic levels, so the result
 
 Given the tricky situation where low level random effects enter the model as Gaussian variables that are subsumed into the GLMM process, there may be interest in simulating lower level processes. The extent to which these simulations can be conducted depends on the R package being used. Conditional models where the predictions are conditioned on the random effects only are fully supported for **lme4** and partially supported for **glmmTMB** (see [GitHub issue](https://github.com/glmmTMB/glmmTMB/issues/888) for technical details). The DHARMa documentation warns that unconditional simulations can result in greater variability of the residuals and lower power to detect deviations from model expectations in higher-level processes. In particular, dispersion tests can be less sensitive using unconditional rather than conditional simulations. 
 
-Below are examples of conditional and unconditional residual simulations. This example, used earlier, is from the ***lme4*** package. 
+Below are examples of conditional and unconditional residual simulations. 
 
-[[finish content]]
+#### Example 1 
+*Data set from the lme4 package*
 
-
-```{r, echo=TRUE,eval=FALSE}
-m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
-            family = binomial, data = VerbAgg, nAGQ=0L)
-```
-
-A conditional simulation: 
-```{r}
-r2a <- simulateResiduals(m2, plot=TRUE)
-```
-
-Unconditional Simulations
+For ***glmmTMB***, DHARMa conducts simulations on the *conditional* model by default. 
 
 ```{r}
-r2b <- simulateResiduals(m2, plot=TRUE)
+#| echo: true
+data(cbpp)
+
+g1 <- glmmTMB(cbind(incidence, size - incidence) ~ period + (1 |herd), 
+            data = cbpp, 
+            family = binomial())
+```
+
+
+**Conditional Simulations:**
+
+```{r}
+#| echo: true
+r1a <- simulateResiduals(g1, plot=TRUE)
+```
+
+**Unconditional Simulations**
+
+This is a bit more difficult to implement and currently [not well supported](https://github.com/glmmTMB/glmmTMB/issues/888). The simulation setting overall for an object must be manually set to only use fixed effects. 
+
+```{r}
+set_simcodes(g1$obj, val = "fix") 
+r1b <- simulateResiduals(g1, plot=TRUE)
+```
+
+These would be need to be reset to random to return to conditional simulations:
+
+```{r}
+set_simcodes(g1$obj, val = "random") 
+```
+
+#### Example 2 
+*Using same data set as example 1*
+
+For ***lme4***, DHARMa conducts simulations on the marginal *unconditional* model by default. 
+
+```{r}
+#| echo: true
+g2 <- glmer(cbind(incidence, size - incidence) ~ period + (1 |herd), 
+            data = cbpp, 
+            family = binomial())
+```
+
+**Conditional Simulations:**
+```{r}
+#| echo: true
+r2a <- simulateResiduals(g2, plot=TRUE, n = 500, re.form = NULL)
+```
+
+This is equivalent to
+
+ ```{r}
+ #| echo: true
+#| eval: false
+simulateResiduals(g2, plot=TRUE, n = 500, re.form = ~(1|herd))
+```
+
+**Unconditional Simulations**
+
+```{r}
+#| echo: true
+r2b <- simulateResiduals(g2, plot=TRUE, n = 500)
+```
+
+This is equivalent to:
+
+```{r}
+#| echo: true
+#| eval: false
+simulateResiduals(g2, plot=TRUE, n = 500, re.form = ~0)
+simulateResiduals(g2, plot=TRUE, n = 500, re.form = NA)
 ```
 
 
