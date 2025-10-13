@@ -1,5 +1,6 @@
 ---
 title: "Using Randomized Quantile Residuals to Assess Model Fit of Generalized Linear Mixed Models"
+author: "Julia Piaskowski"
 code: 
   echo: true
 ---
