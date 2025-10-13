@@ -244,8 +244,6 @@ hist(sims, main = expression(paste("Poisson Example: ", hat(Y[i]), " = ", lambda
 abline(v = mean(sims), lwd = 2, lty = 2, col = "red2")
 ```
 
-
-
 ### DHARMa example for a GLMM with a Poisson-distributed variable 
 
 It always helps to see an example. Below, the DHARMa package itself is used to simulate a data set with a single random effect of "group" (10 levels), a fixed effect "Environment1", and the Poisson-distributed response variable, "observedResponse", with a scale parameter of 3 and no overdispersion. 
@@ -338,7 +336,6 @@ wr <- simulateResiduals(wrongModel, plot = TRUE)
 ```
 
 The deviating quantile lines most certainly indicate the wrong model specification and a possible mean-residual relationship not fully accounted for in the statistical model. The residuals did not fail the disperson test (two-sided, evaluating both under- and overdispersion), but, they did fail the Kolmogorov-Smirnov for uniformity of the residuals. Not every DHARMa residual panel can precisely diagnose the problems, especially for extreme examples like this when the entire distribution is wrong, but they can initiate a process of evaluating model misspecification. 
-
 
 ### Additional DHARMa Functionality to Consider
 
@@ -460,7 +457,7 @@ Assessing if a generalized linear mixed model (GLMM) is appropriately specified 
 
 - **Randomized quantile residuals are a great tool.** These are helpful for diagnosing model misspecification and do work much better than conventional residuals for identifying problems. 
 
-- **Interpret DHARMa results as suggetions, not rules.** Although the hypothesis tests conducted by DHARMa provide an easy decision making tool, recall that no hypothesis provides an unambiguous answer. Outlier test results in particular should be treated with caution and not strictly diagnostic for individual observations.
+- **Interpret DHARMa results as suggestions, not rules.** Although the hypothesis tests conducted by DHARMa provide an easy decision making tool, recall that no hypothesis provides an unambiguous answer. Outlier test results in particular should be treated with caution and not strictly diagnostic for individual observations.
 
 - **Functionality** in DHARMa depends on the simulation functions build into GLMM package that is being supported and what options are available through that package. Supported packages and function include: `lm()`, `glm()`, **lme4**, **glmmTMB**, **GLMMadaptive**, **mgcv**, **spaMM**, **mgcv**, **gamm4**, **brms**, among other packages. 
 
