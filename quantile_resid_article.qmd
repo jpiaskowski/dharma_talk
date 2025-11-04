@@ -104,7 +104,7 @@ $$ d_i = \frac {Y_i - \hat{Y_i}} {\sigma} $$
 *(The Pearson residual for a normally-distributed variable)*
 :::
 
-These take different scaling approaches in order to decouple the relationship between the fitted values and the residual variance. Plots of residuals of all types (e.g., Pearson, deviance) from GLMMs are less amenable to direct interpretation. In such cases, detecting deviations from model expectations such as overdispersion, underdispersion or zero-inflation is difficult, and standard goodness of fit tests are not valid. 
+These take different scaling approaches in order to decouple the relationship between the fitted values and the residual variance. Plots of residuals of all types (e.g., Pearson, deviance) from GLMMs are less amenable to direct interpretation. In such cases, detecting deviations from model expectations such as overdispersion, underdispersion or zero-inflation is difficult, and standard goodness of fit tests are not valid.
 
 ```{r}
 #| label: fig-02
@@ -119,6 +119,19 @@ m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item),
 
 par(mar = c(5.1, 5, 2.1, 2.1))
 plot(fitted(m2), resid(m2, type = "deviance"), cex.axis = cex_axis, cex.lab = cex_lab, cex = cex_, col = col1, ylab = "deviance residual", xlab = "fitted value")
+```
+
+```{r}
+#| echo: true
+#| eval: false
+
+library(lme4)
+data("VerbAgg")
+m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
+            family = binomial, data = VerbAgg, nAGQ=0L)
+
+plot(fitted(m2), resid(m2, type = "deviance"), 
+     ylab = "deviance residual", xlab = "fitted value")
 ```
 
 Since conventional residual plots are sometimes useless for GLMMs, what tools do work? And more saliently, what modelling assumptions of GLMMs should practitioners evaluate? 
@@ -166,7 +179,7 @@ Dunn and Smyth originally recommend running *at least* 4 quantile samples per ob
 
 Quantile residuals can be interpreted similarly to common diagnostic residuals plots such as the q-q plot and the residual-versus-fitted values plot. Thus, randomized quantile residuals permit users to evaluate how well the data conform to model distributional assumptions and model parameter expectations. 
 
-This method is implemented in the R packages "statmod" for `glm` objects [@statmod] and  by "DHARMa" for many linear modelling object types [@dharma]. Since DHARMa has broad compatibility with many GLMM modelling packages and is widely used by researchers, functionality from that package will be the focus for the rest of this chapter. 
+This method is implemented in the R packages "statmod" for `glm` objects^[These are generalized linear models with no random effects.] [@statmod] and by "DHARMa" for many linear modelling object types [@dharma]. Since DHARMa has broad compatibility with many GLMM modelling packages and is widely used by researchers, functionality from that package will be the focus for the rest of this chapter. 
 
 ### DHARMa (Diagnostics for HierArchical Regression Models)
 
@@ -255,8 +268,6 @@ text(4, 0.8, expression(paste(r[i])))
 rm(yi, x, dat, res, mu)
 ```
 
-For a single observation, a range of quantile residuals will result from the simulations. In the right margin is an example of different residuals that results for the conditions of $F(y_i; \hat{\mu}) \sim Poisson(\mu)$ where $\hat{\mu} = 5$ and $y_i = 7$. 
-
 ```{r}
 #| echo: false
 #| label: fig-04
@@ -283,7 +294,12 @@ hist(sims, main = expression(paste("Poisson Example: ", hat(Y[i]), " = ", lambda
 abline(v = mean(sims), lwd = 3, lty = 2, col = col3)
 ```
 
-### DHARMa example for a GLMM with a Poisson-distributed variable 
+For a single observation, a range of quantile residuals will result from the simulations. In the right margin is an example of different residuals that results for the conditions of $F(y_i; \hat{\mu}) \sim Poisson(\mu)$ where $\hat{\mu} = 5$ and $y_i = 7$. 
+
+
+### DHARMa Example
+
+*A GLMM of a Poisson-distributed variable* 
 
 It always helps to see an example. Below, the DHARMa package itself is used to simulate a data set with a single random effect of "group" (10 levels), a fixed effect "Environment1", and the Poisson-distributed response variable, "observedResponse", with a scale parameter of 3 and no overdispersion. 
 
@@ -299,7 +315,7 @@ testData = createData(sampleSize = 500,
 
 ```
 
-Distribution of the simulated dependent variable look as expected for a Poisson-distributed variable: 
+ 
 
 ```{r}
 #| echo: false
@@ -314,9 +330,7 @@ hist(testData$observedResponse, main = NULL, xlab = "raw data",
      cex.axis = cex_axis, cex.lab = cex_lab, cex = cex_, col = col2)
 ```
 
-```{r}
-head(testData)
-```
+Distribution of the simulated dependent variable look as expected for a Poisson-distributed variable (@fig-05). 
 
 Next, the data set is analyzed correctly using a GLMM model: 
 
@@ -330,10 +344,6 @@ wrongModel <- lmer(observedResponse ~ Environment1 + (1|group) ,
                      data = testData) 
 ```
 
-The standard residual plot for both deviance residuals is predictably a bit weird and hard to interpret. The plot using Pearson residuals is not any more diagnostic. 
-
-Here are the standard residual plots for both deviance and Pearson residuals. Without the labels, it is difficult to ascertain the correct model. 
-
 ```{r}
 #| echo: false
 #| label: fig-06
@@ -343,9 +353,11 @@ Here are the standard residual plots for both deviance and Pearson residuals. Wi
 par(mar = c(5.1, 5, 2.1, 2.1))
 
 plot(fitted(rightModel), residuals(rightModel, type = "deviance"), 
-     main = "correct model", xlab = "fitted values", ylab = "deviance residuals", 
+     main = NULL, xlab = "fitted values", ylab = "deviance residuals", 
      col = col1, cex.lab = cex_lab, cex.axis = cex_axis, cex.main = cex_lab); abline(h = 0)
 ```
+
+@fig-06 is the standard residual plots for the deviance residuals (the Pearson residual plot is very similar). This plot is predictably a bit weird and hard to interpret. 
 
 Now, let's Look at the DHARMa quantile residual output for the correctly specified model:
 
@@ -441,6 +453,8 @@ g1 <- glmmTMB(cbind(incidence, size - incidence) ~ period + (1|herd),
 **Conditional Simulations:**
 
 ```{r}
+#| label: fig-09
+#| fig-cap: "Conditional simulations of a glmmTMB object"
 r1a <- simulateResiduals(g1, plot = TRUE)
 ```
 
@@ -449,6 +463,8 @@ r1a <- simulateResiduals(g1, plot = TRUE)
 This is a bit more difficult to implement and is currently [minimally documented](https://github.com/glmmTMB/glmmTMB/issues/888). The simulation setting overall for an object must be manually set to only use fixed effects. 
 
 ```{r}
+#| label: fig-10
+#| fig-cap: "Unconditional simulations of a glmmTMB object"
 set_simcodes(g1$obj, val = "fix") 
 
 r1b <- simulateResiduals(g1, plot = TRUE)
@@ -493,7 +509,6 @@ This is equivalent to
 ```{r}
 #| echo: true
 #| eval: false
-#| label: fig-12
 #| fig-cap: "Unconditional simulation of a glmer object"
 
 r2a <- simulateResiduals(g2, plot=TRUE, re.form = ~(1|herd))
@@ -505,6 +520,7 @@ r2a <- simulateResiduals(g2, plot=TRUE, re.form = ~(1|herd))
 
 ```{r}
 #| echo: true
+#| label: fig-12
 r2b <- simulateResiduals(g2, plot = TRUE)
 ```
 
@@ -517,6 +533,52 @@ r2b <- simulateResiduals(g2, plot=TRUE, re.form = ~0)
 r2b <- simulateResiduals(g2, plot=TRUE, re.form = NA)
 ```
 
+## Other Implementations
+
+The R package 'performance' [@Ludecke2021] serves as a wrapper for DHARMa, implementing DHARMa function by default for generalized linear models. There is no existing implementation in SAS 9.4, but it is possible to manual write functions calculating quantile residuals.  
+
+The R package 'glmmTMB' [@glmmTMB, @glmmTMB_multi] has an [in-package implementation](https://cran.r-project.org/web/packages/glmmTMB/refman/glmmTMB.html#residuals.glmmTMB) of quantile residuals for the binomial, poisson, and negative binomial distributions ([linear and quadratic parameterizations](https://cran.r-project.org/web/packages/glmmTMB/refman/glmmTMB.html#topic+family_glmmTMB)). 
+
+Recall the model used for the residuals in @fig-02: 
+
+```{r}
+#| echo: true
+#| eval: false
+
+library(lme4)
+data("VerbAgg")
+m2 <- glmer(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
+            family = binomial, data = VerbAgg, nAGQ=0L)
+```
+
+The same model can be specified in glmmTMB and quantile residuals can be calculated: 
+
+```{r}
+#| label: fig-13
+#| fig-cap: "glmmTMB quantile residuals"
+#| echo: false
+#| column: margin
+
+m3 <- glmmTMB(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
+            family = binomial, data = VerbAgg)
+
+par(mar = c(5.1, 5, 2.1, 2.1))
+plot(predict(m3,type="response"), residuals(m3,type="dunn-smyth"), 
+     cex.axis = cex_axis, cex.lab = cex_lab, cex = cex_, col = col1, 
+     ylab = "quantile residual", xlab = "fitted value")
+```
+
+```{r}
+#| echo: true
+#| eval: false
+
+m3 <- glmmTMB(r2 ~ (Anger + Gender + btype + situ)^2 + (1|id) + (1|item), 
+            family = binomial, data = VerbAgg)
+
+plot(predict(m3,type="response"), residuals(m3,type="dunn-smyth"))
+```
+Unlike default DHARMa residuals, these are transformed to the normal distribution. 
+
 ## Limitations to Randomized Quantile Residuals
 
 There is a relative paucity of peer-reviewed literature on randomized quantile residuals. As described previously, Dunn and Smyth [-@Dunn1996] established the basic framework for calculating randomized quantile residuals in a short communication, which Warton et al. and [-@Warton2017] expanded on and determined that this approach works for sparse (zero-enriched), overdispersed and high-dimension data (i.e., many independent variables). Warton established that this residual approach only requires information on the marginal distribution of data and does not require understanding the joint distributions of data from marginal models, nor does it need information on correlation structures in clustered data. Feng et al. [-@Feng2020] further developed a stronger theoretical foundation for randomized quantile residuals and evaluated the ability of these to detect deviations from non-linearity, overdispersion, and zero-inflation. The residual patterns were such that deviations from linearity for discrete and continuous outcome variables, overdispersion and model misspecification with regard to zero inflation was detectable. However, there has been no published work exploring the performance of randomized quantile residuals in a mixed-model context (general or generalized). 
@@ -525,7 +587,7 @@ Randomized quantile residuals are not intended to work with any categorical outc
 
 ## Conclusion and Best Practices
 
-Assessing if a generalized linear mixed model (GLMM) is appropriately specified for a given data set and data generating process is challenging since often GLMMs have no defined distribution for model residuals. Randomized quantile residuals are a useful model diagnostic tool for those situations. The implementation provided by the R package DHARMa is reliable and has compatability with a a broad selection of GLMM modelling packages. The R package 'performance' [@Ludecke2021] serves as a wrapper for DHARMa, implementing DHARMa function by default for generalized linear models. There is no existing implementation in SAS 9.4, but it is possible to manual write functions calculating quantile residuals.  
+Assessing if a generalized linear mixed model (GLMM) is appropriately specified for a given data set and data generating process is challenging since often GLMMs have no defined distribution for model residuals. Randomized quantile residuals are a useful model diagnostic tool for those situations. The implementation provided by the R package DHARMa is reliable and has compatability with a broad selection of GLMM modelling packages. 
 
 - **Randomized quantile residuals are a great diagnostic tool for GLMMs.** These are helpful for diagnosing model misspecification and do work much better than conventional residuals for identifying problems. 
 
