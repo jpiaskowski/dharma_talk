@@ -185,10 +185,7 @@ This method is implemented in the R packages "statmod" for `glm` objects^[These 
 
 ### DHARMa (Diagnostics for HierArchical Regression Models)
 
-DHARMa is a widely-used package implementing Dunn-Smythe randomized quantile residuals. The package was first released in 2016 (CRAN archive, https://cran.r-project.org/src/contrib/Archive/DHARMa/m accessed Dec 17, 2025) and 
-for GLMM model diagnostics. 
-
-
+DHARMa is a widely-used package implementing Dunn-Smyth randomized quantile residuals. The package was first released in 2016 (CRAN archive, https://CRAN.R-project.org/package=DHARMa) and has high usage metrics according to rOpenSci (R-Universe, https://florianhartig.r-universe.dev/DHARM1) with 247 stars on its GitHub repository, 14 total contributors to the code base, 15 reverse dependencies and a daily average of 1000 downloads from CRAN (all websites accessed Dec 17, 2025).  
 
 ### The DHARMa Process
 
