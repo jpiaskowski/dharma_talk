@@ -9,6 +9,7 @@ fittedModel <- glmmTMB(observedResponse ~ Environment1 + (1|group),
 
 # check default for simulating data:
 for (i in seq_along(fittedModel$obj$env$data$terms)) print(fittedModel$obj$env$data$terms[[i]]$simCode)
+# result: [1] 2
 # dharma simulation
 simulationOutput0 <- simulateResiduals(fittedModel = fittedModel, plot = F)
 # glmmTMB simulation
@@ -18,6 +19,7 @@ sim0 <- simulate(fittedModel, seed = 101, nsim = 2)
 set_simcodes(fittedModel$obj, val = "random", terms = "ALL")
 # check simulation conditions changed
 for (i in seq_along(fittedModel$obj$env$data$terms)) print(fittedModel$obj$env$data$terms[[i]]$simCode)
+# result: [1] 2 (expect 2)
 simulationOutput_ran <- simulateResiduals(fittedModel = fittedModel, plot = F)
 sim_ran <- simulate(fittedModel, seed = 101, nsim = 2) 
 
@@ -25,12 +27,14 @@ sim_ran <- simulate(fittedModel, seed = 101, nsim = 2)
 set_simcodes(fittedModel$obj, val = "zero", terms = "ALL")
 # check simulation conditions changed
 for (i in seq_along(fittedModel$obj$env$data$terms)) print(fittedModel$obj$env$data$terms[[i]]$simCode)
+# result: [1] 0    (expect 0)
 simulationOutput_zero <- simulateResiduals(fittedModel = fittedModel, plot = F)
 sim_zero <- simulate(fittedModel, seed = 101, nsim = 2)
 
 set_simcodes(fittedModel$obj, val = "fix", terms = "ALL")
 # check simulation conditions changed
 for (i in seq_along(fittedModel$obj$env$data$terms)) print(fittedModel$obj$env$data$terms[[i]]$simCode)
+# result: [1] 1    (expect 1)
 simulationOutput_fix <- simulateResiduals(fittedModel = fittedModel, plot = F)
 sim_fix <- simulate(fittedModel, seed = 101, nsim = 2)
 
@@ -40,7 +44,9 @@ res_ran <- residuals(simulationOutput_ran)
 res_zero <- residuals(simulationOutput_zero)
 res_fix <- residuals(simulationOutput_fix)
 
-identical(res0, res_ran); identical(res0, res_zero); identical(res0, res_fix)
+identical(res0, res_ran) # expect identical
+identical(res0, res_zero) # expect different
+identical(res0, res_fix) # expect different
 
 # check glmmTMB simulations
 
