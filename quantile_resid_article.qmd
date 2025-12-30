@@ -40,6 +40,7 @@ col3 = "red2"
 
 ## Introduction to the Problem
 
+Residuals
 In the (general) linear mixed model framework,
 
 $$\mathbf{Y = Xb + Za + \epsilon} $$
@@ -57,7 +58,7 @@ $$a \sim N(0, \sigma_a^2) $$
 $$ y_i|a_i \sim𝑁(x_i \beta, \sigma^2/n_i) $$
 :::
 
-These assumptions can be quickly assessed by plotting the residuals versus the fitted values and/or by generating a qq-plot. [[Josefinas: add more on on this, make a full paragraph, perhasps discuss test-based approaches]]
+These assumptions can be quickly assessed by plotting the residuals versus the fitted values and/or by generating a qq-plot. [[Josefinas: add more on on this, make a full paragraph, perhaps discuss test-based approaches]]
 
 ```{r}
 #| label: fig-01
@@ -83,6 +84,9 @@ Alternatives to the standard residuals have been developed, including Pearson, s
 
 **Raw:**
 $$\epsilon_i = Y_i - \hat{Y_i} $$
+**Pearson/Scaled:**
+
+$$ \epsilon_i = \frac {Y_i - \hat{Y_i}} {sd(Y_i)}  $$
 
 **Studentized**
 
@@ -91,20 +95,23 @@ $$ \epsilon_i = \frac {Y_i - \hat{Y_i}} {\sqrt{MSE_{(i)}(1-h_{ii})}}  $$
 $MSE_{(i)}$ mean square error when the $i^{th}$ observation is deleted
 $h_{ii} $ leverage of the $i^{th}$ observation
 
-**Pearson/Scaled:**
 
-$$ \epsilon_i = \frac {Y_i - \hat{Y_i}} {sd(Y_i)}  $$
 
 **Deviance**
 
 $$ \epsilon_i = sign(Y_i - \hat{Y_i})\sqrt{d_i}  $$
-and
 
-$$ d_i = \frac {Y_i - \hat{Y_i}} {\sigma} $$
-*(The Pearson residual for a normally-distributed variable)*
+Where $d_i$ are deviances each observation contributes to the overall deviance. The formulation for deviances differs by distributions. 
+
+**Anscombe**
+
+A function, $A(y)$ to achieve normality in the distribution of $A(Y)$:
+
+$$A( ) =  \int \frac{d\mu}{V^{\frac{1}{3}}\mu} $$
+
 :::
 
-These take different scaling approaches in order to decouple the relationship between the fitted values and the residual variance. Plots of residuals of all types (e.g., Pearson, deviance) from GLMMs are less amenable to direct interpretation. In such cases, detecting deviations from model expectations such as overdispersion, underdispersion or zero-inflation is difficult, and standard goodness of fit tests are not valid.
+These take different scaling approaches in order to decouple the relationship between the fitted values and the residual variance, to approximately normality in the dependent variable, and/or introduce homoscedasticty [@glm1983, @glm1989, @pierce1986]. Plots of these scaled residuals from GLMMs are frequently less amenable to direct interpretation compared to those from (Gaussian) linear models. In such cases, detecting deviations from model expectations such as overdispersion, underdispersion or zero-inflation is difficult, and standard goodness of fit tests are not valid. 
 
 ```{r}
 #| label: fig-02
