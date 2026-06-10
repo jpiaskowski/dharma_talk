@@ -460,32 +460,22 @@ g1 <- glmmTMB(cbind(incidence, size - incidence) ~ period + (1|herd),
 ```
 
 
-```{r}
-#| eval: false
-#| include: false
-for (i in seq_along(g1$obj$env$data$terms)) print(g1$obj$env$data$terms[[i]]$simCode)
-```
-
 
 **Conditional Simulations:**
 
 ```{r}
 #| label: fig-09
 #| fig-cap: "Conditional simulations of a glmmTMB object"
-r1a <- simulateResiduals(g1, plot = TRUE)
+r1a <- simulateResiduals(g1, plot = TRUE, simulateREs = "conditional")
 ```
-
-2026/06/09 THERE APPEARS TO BE NO DIFFERENCE BETWEEN SIMULATIONS WITHIN 'glmmTMB' AT THIS TIME, ALL LOOK LIKE CONDITIONAL SIMULATION
 
 **Unconditional Simulations**
 
-This is a bit more difficult to implement and is currently [minimally documented](https://cran.r-project.org/web/packages/glmmTMB/refman/glmmTMB.html#set_simcodes). The simulation setting overall for an object must be manually set to only use fixed effects. 
+Fully unconditional simulations can be set as thus:
 
 ```{r}
 #| fig-cap: "Unconditional simulations of a glmmTMB object"
-set_simcodes(g1$obj, val = "random") 
-
-r1b <- simulateResiduals(g1, plot = TRUE)
+r1b <- simulateResiduals(g1, plot = TRUE, simulateREs = "unconditional")
 ```
 
 The tests are similar, although the unconditional simulations indicate less variance between the time periods, possible masking some evidence of heteroscedasticity. 
