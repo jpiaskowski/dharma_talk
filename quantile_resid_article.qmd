@@ -10,6 +10,8 @@ format:
     embed-resources: true
   pdf:
     colorlinks: true
+    toc: true
+    number-sections: true
 ---
 
 ```{r}
