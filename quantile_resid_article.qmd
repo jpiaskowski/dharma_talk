@@ -9,8 +9,6 @@ format:
   html:
     embed-resources: true
   pdf:
-    toc: true
-    number-sections: true
     colorlinks: true
 ---
 
@@ -363,8 +361,9 @@ plot(fitted(rightModel), residuals(rightModel, type = "deviance"),
 Now, let's Look at the DHARMa quantile residual output for the correctly specified model:
 
 ```{r}
-#| fig-cap: "Randomized quantile residuals for a correctly specified model"
 #| label: fig-07
+#| fig-cap: "Randomized quantile residuals for a correctly specified model"
+
 
 sr <- simulateResiduals(rightModel, plot = TRUE)
 ```
@@ -465,6 +464,7 @@ r1a <- simulateResiduals(g1, plot = TRUE, simulateREs = "conditional")
 Fully unconditional simulations can be set as thus:
 
 ```{r}
+#| label: fig-10
 #| fig-cap: "Unconditional simulations of a glmmTMB object"
 r1b <- simulateResiduals(g1, plot = TRUE, simulateREs = "unconditional")
 ```
